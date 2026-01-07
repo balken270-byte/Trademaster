@@ -3405,191 +3405,154 @@ function actionSellFromMarket() {
     }
 }
 
-/* --- TAMİR EDİLMİŞ VE GÜÇLENDİRİLMİŞ BİLDİRİM SİSTEMİ (V2) --- */
+/* --- XIAOMI & ANDROID İÇİN GÜÇLENDİRİLMİŞ BİLDİRİM SİSTEMİ (V3 - FINAL) --- */
 
-// 1. Service Worker Kurulumu (Mobil Bildirimler İçin Şart)
+// 1. Önce Eski/Bozuk Service Worker'ları Temizle ve Yenisini Kur
 if ('serviceWorker' in navigator) {
-    const swCode = `
-        self.addEventListener('install', (event) => {
-            self.skipWaiting(); // Beklemeden aktif ol
-        });
-        self.addEventListener('activate', (event) => {
-            event.waitUntil(clients.claim()); // Sayfayı ele geçir
-        });
-        self.addEventListener('notificationclick', function(event) {
-            event.notification.close();
-            event.waitUntil(
-                clients.matchAll({type: 'window', includeUncontrolled: true}).then(windowClients => {
-                    for (var i = 0; i < windowClients.length; i++) {
-                        var client = windowClients[i];
-                        if ('focus' in client) return client.focus();
-                    }
-                    if (clients.openWindow) return clients.openWindow('/');
-                })
-            );
-        });
-    `;
-    const blob = new Blob([swCode], {type: 'text/javascript'});
-    const swUrl = URL.createObjectURL(blob);
-    navigator.serviceWorker.register(swUrl).catch(err => console.error("SW Hatası:", err));
-}
+    // Sayfa yüklenir yüklenmez çalışsın
+    window.addEventListener('load', async () => {
+        try {
+            // Eski kayıtları bul ve sil (Temizlik)
+            const registrations = await navigator.serviceWorker.getRegistrations();
+            for(let registration of registrations) {
+                // Eğer bozuksa sil
+                if(!registration.active && !registration.waiting && !registration.installing) {
+                   await registration.unregister();
+                }
+            }
 
-// 2. İzin İsteme (Ayarlar Menüsü İçin)
-function requestNotifyPermission() {
-    if (!("Notification" in window)) {
-        alert("Cihazınız bildirim desteklemiyor.");
-        return;
-    }
-    Notification.requestPermission().then((permission) => {
-        checkNotifyUI();
-        if (permission === "granted") {
-            addNotification('success', 'İzin Verildi', 'Telefon bildirimleri aktif edildi.');
-        } else {
-            alert("İzin reddedildi. Tarayıcı ayarlarından site izinlerini sıfırlayın.");
+            // Yeni "Sanal" Worker Kodunu Hazırla
+            const swCode = `
+                self.addEventListener('install', (event) => {
+                    self.skipWaiting(); // Beklemeden aktif ol
+                });
+                self.addEventListener('activate', (event) => {
+                    event.waitUntil(clients.claim()); // Sayfayı ele geçir
+                });
+                self.addEventListener('notificationclick', function(event) {
+                    event.notification.close();
+                    event.waitUntil(
+                        clients.matchAll({type: 'window', includeUncontrolled: true}).then(windowClients => {
+                            if (windowClients.length > 0) {
+                                windowClients[0].focus();
+                            } else {
+                                clients.openWindow('/');
+                            }
+                        })
+                    );
+                });
+            `;
+            
+            const blob = new Blob([swCode], {type: 'text/javascript'});
+            const swUrl = URL.createObjectURL(blob);
+            
+            // Yenisini Kaydet
+            const reg = await navigator.serviceWorker.register(swUrl, { scope: './' });
+            console.log("SW Başarıyla Kaydedildi:", reg);
+
+        } catch (err) {
+            console.error("SW Kurulum Hatası:", err);
         }
     });
 }
 
-// 3. İzin UI Kontrolü
-function checkNotifyPermission() {
-    const card = document.getElementById('permRequestCard');
-    if (!("Notification" in window)) return;
-    
-    // checkNotifyUI fonksiyonu ile aynı işi yapar, ikisini birleştirdik
-    if (Notification.permission === "granted" || Notification.permission === "denied") {
-        if(card) card.style.display = 'none';
-    } else {
-        if(card) card.style.display = 'block';
-    }
-}
-// Eski kodda checkNotifyUI çağrıldığı için alias (takma ad) oluşturuyoruz:
-const checkNotifyUI = checkNotifyPermission;
-
-// 4. Ayarları Yükle
-function loadNotifyUI() {
-    if(!notifySettings) return;
-    document.getElementById('ntf_price').checked = notifySettings.price;
-    document.getElementById('ntf_trade').checked = notifySettings.trade;
-    document.getElementById('ntf_news').checked = notifySettings.news;
-    document.getElementById('ntf_sound').checked = notifySettings.sound;
-    document.getElementById('ntf_vibrate').checked = notifySettings.vibrate;
-    checkNotifyPermission();
-}
-
-// 5. Ayarları Kaydet
-function saveNotifySettings() {
-    notifySettings.price = document.getElementById('ntf_price').checked;
-    notifySettings.trade = document.getElementById('ntf_trade').checked;
-    notifySettings.news = document.getElementById('ntf_news').checked;
-    notifySettings.sound = document.getElementById('ntf_sound').checked;
-    notifySettings.vibrate = document.getElementById('ntf_vibrate').checked;
-    
-    localStorage.setItem('tm_notify_settings', JSON.stringify(notifySettings));
-    
-    if(notifySettings.sound && event && event.target.id === 'ntf_sound') playNotificationSound('success');
-}
-
-// 6. Ses ve Titreşim Motoru
-const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-function playNotificationSound(type) {
-    // Kullanıcı etkileşimi olmadan ses çalmayı engelleyen tarayıcılar için resume
-    if(audioCtx.state === 'suspended') audioCtx.resume();
-
-    // Basit bir osilatör sesi (Dosyasız)
-    const osc = audioCtx.createOscillator();
-    const gain = audioCtx.createGain();
-    
-    if(type === 'danger' || type === 'warn') {
-        osc.type = 'sawtooth'; // Uyarı için sert ses
-        osc.frequency.value = 150;
-        gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.5);
-        osc.start();
-        setTimeout(() => osc.stop(), 500);
-    } else {
-        osc.type = 'sine'; // Başarı için yumuşak ses
-        osc.frequency.value = 600;
-        gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.3);
-        osc.start();
-        setTimeout(() => osc.stop(), 300);
-    }
-    
-    osc.connect(gain);
-    gain.connect(audioCtx.destination);
-}
-
-// 7. Test Fonksiyonu
-function testNotification() {
-    addNotification('info', 'Test Mesajı', 'Telefon bildirimi, ses ve titreşim kontrolü.');
-}
-
-// 8. ANA BİLDİRİM GÖNDERME MOTORU (Notification Sender)
+// 2. Bildirim Gönderme Ana Fonksiyonu
 async function addNotification(type, title, msg) {
-    // A. Uygulama İçi Listeye Ekle
+    // Listeye ekle
     let n = { type: type, title: title, msg: msg, time: new Date().toLocaleTimeString(), read: false };
     notifications.unshift(n);
     if(notifications.length > 50) notifications.pop();
     localStorage.setItem('tm_notifications', JSON.stringify(notifications));
     updateBadge();
     
-    // Bildirim sayfasındaysak listeyi yenile
+    // UI Güncelle
     if(document.getElementById('page-notifications') && document.getElementById('page-notifications').classList.contains('active')) {
         renderNotifications();
     }
 
-    // B. Ayar Kontrolü
-    let category = 'trade';
-    if(title.includes('Alarm') || title.includes('HEDEF') || title.includes('DİKKAT')) category = 'price';
-    else if(title.includes('Haber')) category = 'news';
-    
-    // Ayarlar yüklenmemişse varsayılana dön
-    if(typeof notifySettings !== 'undefined' && !notifySettings[category]) return;
-
-    // C. Ses ve Titreşim
-    if(typeof notifySettings !== 'undefined') {
-        if(notifySettings.sound) playNotificationSound(type);
-        if(notifySettings.vibrate && navigator.vibrate) {
-            try { navigator.vibrate([200, 100, 200]); } catch(e){}
-        }
-    }
-
-    // D. TELEFON SİSTEM BİLDİRİMİ (PUSH)
-    if ("Notification" in window) {
-        if (Notification.permission === "granted") {
-            sendSystemNotification(type, title, msg);
-        } else if (Notification.permission !== "denied") {
-            Notification.requestPermission().then(permission => {
-                if (permission === "granted") sendSystemNotification(type, title, msg);
-            });
-        }
+    // Sistem Bildirimi Gönder
+    if ("Notification" in window && Notification.permission === "granted") {
+        sendSystemNotification(type, title, msg);
     }
 }
 
-// 9. Sistem Bildirimi Tetikleyicisi
+// 3. Sistem Bildirimi Tetikleyicisi
 function sendSystemNotification(type, title, msg) {
     let iconUrl = "https://cdn-icons-png.flaticon.com/512/3429/3429170.png";
     if(type === 'danger') iconUrl = "https://cdn-icons-png.flaticon.com/512/190/190406.png";
 
-    // Service Worker Varsa (Mobil İçin En İyisi)
-    if (navigator.serviceWorker && navigator.serviceWorker.ready) {
+    // Service Worker Hazır Olana Kadar Bekle ve Gönder
+    if (navigator.serviceWorker) {
         navigator.serviceWorker.ready.then(registration => {
             registration.showNotification(title, {
                 body: msg,
                 icon: iconUrl,
                 badge: iconUrl,
                 vibrate: [200, 100, 200],
-                tag: 'tm-' + Date.now(),
-                renotify: true
+                tag: 'tm-' + Date.now()
             });
+        }).catch(e => {
+            // SW çalışmazsa yedek yöntem
+            new Notification(title, { body: msg, icon: iconUrl });
         });
-    } 
-    // Masaüstü Yedek Yöntem
-    else {
-        try {
-            const notif = new Notification(title, { body: msg, icon: iconUrl });
-            notif.onclick = function() { window.focus(); notif.close(); };
-        } catch(e) { console.log("Bildirim hatası:", e); }
+    } else {
+        new Notification(title, { body: msg, icon: iconUrl });
     }
 }
+
+/* --- TANI VE TEST BUTONU (GÜNCELLENMİŞ) --- */
+setTimeout(() => {
+    let oldBtn = document.getElementById("debug-btn");
+    if(oldBtn) oldBtn.remove();
+
+    let btn = document.createElement("button");
+    btn.id = "debug-btn";
+    btn.innerHTML = "📢 BİLDİRİM TESTİ (V3)";
+    btn.style.position = "fixed";
+    btn.style.top = "60px";
+    btn.style.left = "50%";
+    btn.style.transform = "translateX(-50%)";
+    btn.style.zIndex = "999999";
+    btn.style.background = "#ef4444";
+    btn.style.color = "white";
+    btn.style.padding = "12px 20px";
+    btn.style.fontWeight = "bold";
+    btn.style.borderRadius = "30px";
+    btn.style.boxShadow = "0 5px 15px rgba(0,0,0,0.5)";
+    btn.style.border = "2px solid white";
+    
+    btn.onclick = async function() {
+        alert("⏳ Kontrol ediliyor...");
+
+        // 1. İzin Kontrolü
+        if (Notification.permission !== "granted") {
+            let perm = await Notification.requestPermission();
+            if (perm !== "granted") {
+                alert("⛔ İzin verilmedi! Adres çubuğundaki kilit simgesinden 'Sıfırla' diyip tekrar deneyin.");
+                return;
+            }
+        }
+
+        // 2. Service Worker Kontrolü
+        if (!navigator.serviceWorker.controller) {
+            // Eğer yüklü değilse sayfayı yenilemeyi öner
+             alert("⚠️ Service Worker henüz hazır değil. Sayfa yenileniyor...");
+             location.reload();
+             return;
+        }
+
+        // 3. Gönderim
+        try {
+            sendSystemNotification('info', 'TradeMaster', 'Tebrikler! Bildirim sistemi çalışıyor 🚀');
+            alert("✅ Komut gönderildi! Yukarıdan bildirim inmesi lazım.");
+        } catch (e) {
+            alert("❌ Hata: " + e);
+        }
+    };
+    
+    document.body.appendChild(btn);
+}, 2000);
+
 /* --- UYGULAMAYI BAŞLATMA KOMUTLARI --- */
 
 // 1. Ana Fonksiyonu Çağır
