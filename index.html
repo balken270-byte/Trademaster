@@ -3,11 +3,15 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>TradeMaster Pro (Live Edition)</title>
+   <title>TradeFlow Pro (Live Edition)</title>
+
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script type="text/javascript" src="https://s3.tradingview.com/tv.js"></script>
+
+        <script src="https://apis.google.com/js/api.js"></script>
+    <script src="https://accounts.google.com/gsi/client"></script>
 
     <style>
         /* --- TEMALAR & DEĞİŞKENLER --- */
@@ -686,10 +690,23 @@
     text-align: center;
 }
 
-/* İkon Boyutu Ayarı */
+/* İkon Boyutu ve Renklendirme */
 .muh-tab i {
-    font-size: 13px; /* İkon hafif küçüldü */
+    font-size: 16px; 
+    opacity: 0.6; 
+    transition: all 0.2s ease;
 }
+
+.muh-tab.active i {
+    opacity: 1;
+    transform: scale(1.15);
+}
+
+/* Kategoriye Özel Renkler */
+.muh-tab:nth-child(1).active i { color: #f59e0b; } /* Kripto - Turuncu */
+.muh-tab:nth-child(2).active i { color: #3b82f6; } /* BIST - Mavi */
+.muh-tab:nth-child(3).active i { color: #eab308; } /* Emtia - Sarı */
+.muh-tab:nth-child(4).active i { color: #10b981; } /* Döviz - Yeşil */
 
 /* Aktif Durum */
 .muh-tab.active {
@@ -743,10 +760,550 @@
 input:checked + .tgl-slider { background-color: var(--success); border-color: var(--success); }
 input:checked + .tgl-slider:before { transform: translateX(20px); }
 
+/* --- APP SETTINGS (DÜZELTİLMİŞ & SABİTLENMİŞ) --- */
+.app-settings-container { 
+    padding: 10px 0 80px 0; 
+}
+
+/* 1. PROFİL KARTI (Aynen Koruyoruz) */
+.profile-banner-card {
+    background: var(--bg-card);
+    border: 1px solid rgba(255,255,255,0.05);
+    border-radius: 20px;
+    padding: 15px;
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    margin-bottom: 25px;
+    position: relative;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+}
+.profile-banner-card.premium-glow {
+    background: linear-gradient(135deg, rgba(245, 158, 11, 0.15) 0%, rgba(180, 83, 9, 0.05) 100%);
+    border: 1px solid rgba(245, 158, 11, 0.4);
+    box-shadow: 0 10px 30px rgba(245, 158, 11, 0.15);
+}
+.pbc-img {
+    width: 60px; height: 60px; border-radius: 50%; object-fit: cover;
+    border: 2px solid var(--accent); flex-shrink: 0; /* Küçülmeyi önle */
+}
+.profile-banner-card.premium-glow .pbc-img { border-color: var(--gold); }
+.pbc-info { display: flex; flex-direction: column; }
+.pbc-name { font-size: 18px; font-weight: 800; color: white; margin-bottom: 4px; }
+.pbc-badge { font-size: 10px; font-weight: 700; background: rgba(255,255,255,0.1); padding: 3px 8px; border-radius: 8px; width: fit-content; }
+.profile-banner-card.premium-glow .pbc-badge { background: linear-gradient(90deg, #f59e0b, #d97706); color:white; }
+
+/* 2. TAB MENÜSÜ (SEGMENTED) */
+.settings-tabs.segmented {
+    display: flex; gap: 5px;
+    background: rgba(255,255,255,0.03);
+    padding: 4px; border-radius: 12px; margin-bottom: 20px;
+}
+.s-tab.seg-style {
+    flex: 1; text-align: center; padding: 10px; font-size: 12px; font-weight: 600;
+    color: var(--text-sub); border-radius: 8px; cursor: pointer; transition: 0.2s;
+}
+.s-tab.seg-style.active {
+    background: var(--bg-card); color: white; font-weight: 700;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+}
+
+/* 3. MENÜ LİSTESİ (SORUNLU KISIM DÜZELTİLDİ) */
+.menu-list-wrapper {
+    background: var(--bg-card);
+    border-radius: 16px;
+    overflow: hidden;
+    border: 1px solid rgba(255,255,255,0.05);
+    margin-bottom: 20px;
+}
+
+/* Satır Yapısı - Flexbox Zorlaması */
+.menu-list-item {
+    display: flex !important; /* Kesinlikle yan yana */
+    align-items: center !important;
+    justify-content: space-between !important;
+    width: 100% !important;
+    padding: 16px !important;
+    background: transparent !important; /* Arka plan karışmasın */
+    border-bottom: 1px solid rgba(255,255,255,0.05);
+    cursor: pointer;
+    box-sizing: border-box;
+}
+.menu-list-item:active { background: rgba(255,255,255,0.03) !important; }
+.menu-list-item:last-child { border-bottom: none; }
+
+/* Sol Taraf (İkon + Yazı) */
+.mli-left {
+    display: flex !important;
+    align-items: center !important;
+    gap: 15px !important;
+}
+
+/* İkon Kutusu - Boyut Sabitleme */
+.mli-icon-box {
+    width: 36px !important;
+    height: 36px !important;
+    min-width: 36px !important; /* Asla küçülme */
+    min-height: 36px !important;
+    border-radius: 10px;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    font-size: 16px;
+    color: white;
+    flex-shrink: 0 !important; /* Sıkışmayı önle */
+}
+
+/* İkon Renkleri (Gradientli) */
+.bg-blue { background: linear-gradient(135deg, #3b82f6, #2563eb); }
+.bg-orange { background: linear-gradient(135deg, #f59e0b, #d97706); }
+.bg-green { background: linear-gradient(135deg, #10b981, #059669); }
+.bg-red { background: linear-gradient(135deg, #ef4444, #dc2626); }
+
+.mli-text {
+    font-size: 15px !important;
+    font-weight: 600 !important;
+    color: white !important;
+    white-space: nowrap;
+}
+
+.mli-arrow { font-size: 12px; color: var(--text-sub); opacity: 0.5; }
+
+/* Detay Sayfaları */
+.settings-detail-wrapper { display: none; padding-top: 10px; }
+.sub-header { display: flex; align-items: center; margin-bottom: 20px; padding-bottom: 10px; border-bottom: 1px solid rgba(255,255,255,0.05); }
+.back-btn { background:none; border:none; color:var(--accent); font-size:16px; font-weight:600; display:flex; align-items:center; gap:5px; cursor:pointer;}
+.sub-title { flex:1; text-align:center; font-weight:700; font-size:16px; transform:translateX(-30px); color:white; }
+
+/* --- HABERLER SAYFASI: TIMELINE + STICKY HEADER --- */
+
+/* 1. Üst Sabit Alan (Header) */
+.news-hero-section {
+    position: sticky;
+    top: 0;
+    z-index: 50;
+    background-color: var(--bg-body); /* Arka plan rengi */
+    padding: 15px 15px 0 15px;
+    border-bottom: 1px solid rgba(255,255,255,0.05);
+    box-shadow: 0 10px 30px rgba(0,0,0,0.5); /* Koyu gölge ile ayrım */
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+/* 2. Modern Arama Çubuğu */
+.news-search-box {
+    display: flex;
+    align-items: center;
+    background: var(--bg-input);
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 12px;
+    padding: 8px 12px;
+    transition: 0.3s;
+}
+.news-search-box:focus-within {
+    border-color: var(--accent);
+    box-shadow: 0 0 10px rgba(59, 130, 246, 0.2);
+}
+.ns-input {
+    flex: 1;
+    background: transparent;
+    border: none;
+    color: white;
+    font-size: 13px;
+    outline: none;
+    padding: 0 10px;
+}
+.ns-btn {
+    background: var(--accent);
+    color: white;
+    border: none;
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* 3. Durum ve Sayaç Satırı */
+.news-status-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0 5px;
+}
+.status-badge {
+    font-size: 10px;
+    font-weight: 800;
+    color: var(--success);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    letter-spacing: 0.5px;
+}
+.dot-pulse {
+    width: 8px;
+    height: 8px;
+    background: var(--success);
+    border-radius: 50%;
+    box-shadow: 0 0 10px var(--success);
+    animation: pulseDot 2s infinite;
+}
+@keyframes pulseDot { 0%{opacity:1;} 50%{opacity:0.3;} 100%{opacity:1;} }
+
+.timer-btn {
+    background: rgba(255,255,255,0.05);
+    border: 1px solid rgba(255,255,255,0.1);
+    color: var(--text-sub);
+    padding: 4px 10px;
+    border-radius: 6px;
+    font-size: 11px;
+    font-weight: 700;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+/* 4. Filtre Butonları */
+.news-filter-chips {
+    display: flex;
+    gap: 8px;
+    padding-bottom: 15px; /* Alt boşluk */
+    overflow-x: auto;
+    scrollbar-width: none;
+}
+.nf-chip {
+    background: var(--bg-input);
+    border: 1px solid rgba(255,255,255,0.1);
+    color: var(--text-sub);
+    padding: 8px 16px;
+    border-radius: 20px;
+    font-size: 11px;
+    font-weight: 700;
+    white-space: nowrap;
+    cursor: pointer;
+}
+.nf-chip.active {
+    background: linear-gradient(90deg, #2563eb, #3b82f6);
+    color: white;
+    border: none;
+    box-shadow: 0 4px 15px rgba(59, 130, 246, 0.4);
+}
+
+/* 5. Timeline (Çizgili Akış) Tasarımı */
+.news-timeline-container {
+    padding: 20px 20px 100px 20px;
+    border-left: 2px solid rgba(255,255,255,0.1); /* Dikey Çizgi */
+    margin-left: 25px; /* Soldan boşluk */
+    position: relative;
+}
+
+.news-item-modern {
+    position: relative;
+    margin-bottom: 30px;
+    padding-left: 20px;
+    animation: slideIn 0.4s ease;
+}
+
+/* Timeline Noktaları (Yuvarlaklar) */
+.news-item-modern::before {
+    content: '';
+    position: absolute;
+    left: -27px; /* Çizginin tam üstüne denk gelir */
+    top: 18px;   /* Kartın başlığına denk gelir */
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    background: var(--bg-body); /* Ortası delik görünümü */
+    border: 2px solid var(--text-sub);
+    z-index: 2;
+    transition: 0.3s;
+}
+
+/* İlk Haber (Son Dakika) - Kırmızı Nokta */
+.news-item-modern.hot::before {
+    border-color: var(--danger);
+    box-shadow: 0 0 15px rgba(239, 68, 68, 0.8);
+    background: var(--danger); /* İçi dolu olsun */
+}
+
+/* Yeni Haberler - Yeşil Nokta */
+.news-item-modern.new::before {
+    border-color: var(--success);
+    box-shadow: 0 0 10px rgba(16, 185, 129, 0.5);
+}
+
+/* Haber Kartı */
+.nim-card {
+    background: var(--bg-card);
+    border: 1px solid rgba(255,255,255,0.05);
+    border-radius: 16px;
+    padding: 16px;
+    cursor: pointer;
+    transition: transform 0.2s;
+}
+.nim-card:active { transform: scale(0.98); background: var(--bg-input); }
+
+.nim-time {
+    font-size: 11px;
+    color: var(--text-sub);
+    font-weight: 700;
+    margin-bottom: 8px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+.nim-title {
+    font-size: 14px;
+    font-weight: 700;
+    color: white;
+    line-height: 1.5;
+    margin-bottom: 12px;
+}
+.nim-source {
+    font-size: 11px;
+    color: var(--accent);
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
+/* --- HABER GÖRSELLERİ İÇİN YENİ CSS --- */
+
+/* Haber kartını yatay düzen (flex row) yapıyoruz */
+.nim-card {
+    display: flex !important; /* Flex düzeni zorla */
+    flex-direction: row !important; /* Yan yana sırala */
+    align-items: center;
+    gap: 12px; /* Görsel ile metin arası boşluk */
+    padding: 10px !important; /* İç boşluğu düzenle */
+}
+
+/* Görsel Kutusu */
+.nim-img-box {
+    flex-shrink: 0; /* Kutunun küçülmesini engelle */
+    width: 64px; 
+    height: 64px;
+    border-radius: 10px; /* Yuvarlak köşeler */
+    overflow: hidden; /* Taşan kısımları gizle */
+    background: rgba(255,255,255,0.05); /* Resim yoksa zemin rengi */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid rgba(255,255,255,0.05);
+}
+
+/* Görselin Kendisi */
+.nim-img-box img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover; /* Görseli kutuya doldur, bozma */
+}
+
+/* Görsel Yoksa Çıkacak İkon */
+.nim-placeholder-icon {
+    font-size: 24px;
+    color: var(--text-sub);
+    opacity: 0.5;
+}
+
+/* Metin Alanı */
+.nim-content {
+    flex: 1; /* Kalan alanı kapla */
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    min-width: 0; /* Metin taşmasını önlemek için kritik */
+}
+
+/* Başlık stili güncellemesi */
+.nim-title {
+    margin-bottom: 6px;
+    line-height: 1.3;
+    max-height: 40px; /* Çok uzun başlıkları sınırla */
+    overflow: hidden;
+    display: -webkit-box;
+    -webkit-line-clamp: 2; /* Max 2 satır göster */
+    -webkit-box-orient: vertical;
+}
+
     </style>
+    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-5912166843737955"
+     crossorigin="anonymous"></script>
+     
+     
+     <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    
+    <title>TradeVia - Canlı Borsa, Altın, Kripto ve Portföy Takip Aracı</title>
+    <meta name="description" content="TradeVia ile BIST 100 hisseleri, canlı altın fiyatları, kripto paralar ve döviz kurlarını anlık takip edin. Profesyonel portföy yönetimi ve finansal analiz aracı.">
+    <meta name="keywords" content="borsa takip, canlı altın, kripto para, portföy yönetimi, bist 100, dolar kuru, finans analizi, trademaster">
+    <meta name="author" content="TradeVia">
+    <meta name="robots" content="index, follow">
+    
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    
+
+
 </head>
 <body>
     <canvas id="bg-canvas"></canvas>
+ 
+<div id="landing-page-container" style="
+    position: fixed; 
+    top: 0; 
+    left: 0; 
+    width: 100%; 
+    height: 100%; 
+    background: radial-gradient(circle at top center, #1e293b 0%, #0b0f19 70%); 
+    z-index: 99999; 
+    overflow-y: auto; 
+    padding: 20px; 
+    display: flex; 
+    flex-direction: column;
+    font-family: 'Inter', sans-serif;">
+
+    <div style="position:fixed; top:-100px; left:50%; transform:translateX(-50%); width:300px; height:300px; background:#3b82f6; filter:blur(150px); opacity:0.2; z-index:-1; pointer-events:none;"></div>
+
+    <div style="max-width:1000px; margin:0 auto; color:white; padding-bottom:50px; width:100%;">
+        
+        <div style="text-align:center; margin-top:60px; margin-bottom:50px; animation:fadeInDown 0.8s ease;">
+            <div style="
+                display:inline-flex; 
+                align-items:center; 
+                gap:10px; 
+                background: rgba(255,255,255,0.03); 
+                padding: 15px 25px; 
+                border-radius: 20px; 
+                border: 1px solid rgba(255,255,255,0.05);
+                backdrop-filter: blur(10px);
+                box-shadow: 0 10px 30px rgba(0,0,0,0.3);">
+                
+                <div style="font-size:28px; font-weight:900; letter-spacing:1px; color:white;">
+                    TRADE<span style="color:#3b82f6;">VİA</span>
+                </div>
+                
+                <div style="
+                    font-size: 10px; 
+                    font-weight: 800; 
+                    background: rgba(245, 158, 11, 0.15); 
+                    color: #f59e0b; 
+                    padding: 4px 8px; 
+                    border-radius: 8px; 
+                    border: 1px solid rgba(245, 158, 11, 0.3);
+                    letter-spacing: 0.5px;">
+                    BETA
+                </div>
+            </div>
+
+            <h1 style="font-size:16px; font-weight:400; color:#94a3b8; margin-top:20px; max-width:800px; margin-left:auto; margin-right:auto; line-height:1.6;">
+                Borsa, Kripto Para ve Emtia piyasaları için hepsi bir arada finans terminali. Gecikmeli veya anlık veri akışıyla piyasaların nabzını tutun, analiz araçlarıyla yatırımlarınızı yönetin.
+            </h1>
+            
+            <button onclick="enterApplication()" style="
+                background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+                color: white; 
+                border: none; 
+                padding: 16px 45px; 
+                font-size: 16px; 
+                font-weight: 700; 
+                border-radius: 16px; 
+                cursor: pointer; 
+                box-shadow: 0 0 25px rgba(59, 130, 246, 0.4); 
+                margin-top: 30px; 
+                transition: all 0.3s ease;
+                border: 1px solid rgba(255,255,255,0.1);
+                display: inline-flex;
+                align-items: center;
+                gap: 10px;">
+                UYGULAMAYI BAŞLAT <i class="fas fa-rocket"></i>
+            </button>
+        </div>
+
+        <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap:20px;">
+            
+            <div style="
+                background: rgba(21, 27, 43, 0.6); 
+                border: 1px solid rgba(255,255,255,0.05); 
+                padding: 25px; 
+                border-radius: 20px; 
+                backdrop-filter: blur(10px);">
+                <div style="width:40px; height:40px; background:rgba(59, 130, 246, 0.1); border-radius:12px; display:flex; align-items:center; justify-content:center; margin-bottom:15px; color:#3b82f6;">
+                    <i class="fas fa-chart-line" style="font-size:18px;"></i>
+                </div>
+                <h2 style="color:white; font-size:16px; font-weight:700; margin-bottom:10px;">Piyasa Takibi</h2>
+                <p style="color:#94a3b8; font-size:13px; line-height:1.6; margin:0;">
+                    TradeVia; Borsa hisseleri, Kripto paralar, Altın (Ons, Gram) ve Döviz kurlarını tek bir ekrandan takip etmenizi sağlar. Veri sağlayıcı politikalarına göre fiyatlar <strong>anlık veya gecikmeli</strong> olarak sunulabilir. Gelişmiş algoritması ile piyasa hareketlerini yakalayın.
+                </p>
+            </div>
+
+            <div style="
+                background: rgba(21, 27, 43, 0.6); 
+                border: 1px solid rgba(255,255,255,0.05); 
+                padding: 25px; 
+                border-radius: 20px; 
+                backdrop-filter: blur(10px);">
+                <div style="width:40px; height:40px; background:rgba(245, 158, 11, 0.1); border-radius:12px; display:flex; align-items:center; justify-content:center; margin-bottom:15px; color:#f59e0b;">
+                    <i class="fas fa-chart-pie" style="font-size:18px;"></i>
+                </div>
+                <h2 style="color:white; font-size:16px; font-weight:700; margin-bottom:10px;">Cüzdan ve Analiz</h2>
+                <p style="color:#94a3b8; font-size:13px; line-height:1.6; margin:0;">
+                    Varlıklarınızı Excel tablolarında takip etmekten yoruldunuz mu? TradeVia ile hisse, coin veya dövizlerinizi maliyetleriyle kaydedin. Uygulama, ortalama maliyetinizi, anlık kâr/zarar durumunuzu ve varlık dağılımınızı grafiklerle <strong>analiz eder</strong>. Portföyünüzün performansını profesyonel araçlarla ölçün.
+                </p>
+            </div>
+
+            <div style="
+                background: rgba(21, 27, 43, 0.6); 
+                border: 1px solid rgba(255,255,255,0.05); 
+                padding: 25px; 
+                border-radius: 20px; 
+                backdrop-filter: blur(10px);">
+                <div style="width:40px; height:40px; background:rgba(16, 185, 129, 0.1); border-radius:12px; display:flex; align-items:center; justify-content:center; margin-bottom:15px; color:#10b981;">
+                    <i class="fas fa-newspaper" style="font-size:18px;"></i>
+                </div>
+                <h2 style="color:white; font-size:16px; font-weight:700; margin-bottom:10px;">Haber Akışı</h2>
+                <p style="color:#94a3b8; font-size:13px; line-height:1.6; margin:0;">
+                    Ekonomi dünyasındaki son gelişmelerden anında haberdar olun. Fed faiz kararları, TCMB açıklamaları, kripto para regülasyonları ve şirket bilançoları gibi piyasayı etkileyen haberleri TradeVia haber akışı üzerinden takip edebilirsiniz. Yatırım kararlarınızı alırken doğru bilgiye en hızlı şekilde ulaşın.
+                </p>
+            </div>
+
+        </div>
+
+        <div style="margin-top:40px; text-align:center; padding-top:20px; border-top:1px solid rgba(255,255,255,0.05);">
+            <p style="font-size:11px; color:#475569; line-height:1.6; max-width:800px; margin:0 auto; text-align: justify;">
+                Bu uygulama (TradeVia) sadece bir takip, analiz ve simülasyon aracıdır. Burada yer alan veriler, grafikler ve analizler yatırım tavsiyesi değildir. Veriler kaynak sağlayıcılara bağlı olarak gecikmeli yansıyabilir.
+                Kullanıcıların yaptığı işlemlerden doğabilecek zararlardan TradeVia sorumlu tutulamaz. Uygulama, kullanıcı deneyimini iyileştirmek için yerel depolama (localStorage) teknolojisini kullanır.
+                Verileriniz sunucularımızda değil, kendi cihazınızda saklanır.
+            </p>
+                    <div style="margin-top:40px; text-align:center; padding-top:20px; border-top:1px solid rgba(255,255,255,0.05);">
+            <p style="font-size:11px; color:#475569; line-height:1.6; max-width:800px; margin:0 auto; text-align: justify;">
+                Bu uygulama (TradeVia) sadece bir takip, analiz ve simülasyon aracıdır. Burada yer alan veriler, grafikler ve analizler yatırım tavsiyesi değildir. Veriler kaynak sağlayıcılara bağlı olarak gecikmeli yansıyabilir.
+                Kullanıcıların yaptığı işlemlerden doğabilecek zararlardan TradeVia sorumlu tutulamaz. Uygulama, kullanıcı deneyimini iyileştirmek için yerel depolama (localStorage) teknolojisini kullanır.
+                Verileriniz sunucularımızda değil, kendi cihazınızda saklanır.
+            </p>
+            
+            <div style="margin-top:20px; display:flex; justify-content:center; gap:20px; flex-wrap:wrap;">
+                <a href="gizlilik.html" target="_blank" style="color:#64748b; font-size:11px; text-decoration:none; font-weight:600; transition:0.2s;">Gizlilik Politikası</a>
+                <a href="kullanim-kosullari.html" target="_blank" style="color:#64748b; font-size:11px; text-decoration:none; font-weight:600; transition:0.2s;">Kullanım Koşulları</a>
+                <a href="iletisim.html" target="_blank" style="color:#64748b; font-size:11px; text-decoration:none; font-weight:600; transition:0.2s;">İletişim</a>
+            </div>
+
+            <div style="margin-top:15px; font-size:11px; color:#334155; font-weight:700;">
+                © 2026 TradeVia - Tüm Hakları Saklıdır
+            </div>
+        </div>
+
+            </div>
+        </div>
+
+    </div>
+</div>
+
 <div id="splash-screen">
     <div class="original-logo-container">
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 273 270">
@@ -769,7 +1326,8 @@ input:checked + .tgl-slider:before { transform: translateX(20px); }
         </svg>
     </div>
     
-    <div class="splash-brand-name">TRADE<span>MASTER</span></div>
+<div class="splash-brand-name">TRADE<span>VİA</span></div>
+
     <div class="splash-loader-bar"></div>
 </div>
 
@@ -779,7 +1337,12 @@ input:checked + .tgl-slider:before { transform: translateX(20px); }
             <i class="fas fa-arrow-left" style="font-size:18px; color:white;"></i>
         </div>
         
-        <div class="app-title">Trade<span>Master</span></div>
+        <div class="app-title">Trade<span>Via</span></div>
+        
+        <div  
+        <span style="font-size:12px; color:#f59e0b; opacity:0.8;">BETA</span></div>
+
+        
     </div>
     
     <div class="header-icons">
@@ -864,27 +1427,25 @@ input:checked + .tgl-slider:before { transform: translateX(20px); }
 
         <div id="unifiedCategories" class="muh-tabs-scroll">
     <div class="muh-tab active" onclick="loadMarketCategory('kripto', this)">
-        <i class="fab fa-bitcoin" style="color:#f59e0b;"></i>
+        <i class="fab fa-bitcoin"></i>
         <span>Kripto</span>
     </div>
     
     <div class="muh-tab" onclick="loadMarketCategory('hisse', this)">
-        <i class="fas fa-chart-line" style="color:#3b82f6;"></i>
+        <i class="fas fa-chart-line"></i>
         <span>BIST 100</span>
     </div>
     
     <div class="muh-tab" onclick="loadMarketCategory('altin', this)">
-        <i class="fas fa-gem" style="color:#eab308;"></i>
+        <i class="fas fa-gem"></i>
         <span>Emtia</span>
     </div>
     
     <div class="muh-tab" onclick="loadMarketCategory('doviz', this)">
-        <i class="fas fa-money-bill-wave" style="color:#10b981;"></i>
+        <i class="fas fa-money-bill-wave"></i>
         <span>Döviz</span>
     </div>
 </div>
-
-
         <div id="unifiedFilters" class="muh-filters">
             <div class="muh-chip active" onclick="sortMarketData('vol', this)">Hacim</div>
             <div class="muh-chip" onclick="sortMarketData('gainers', this)">En Çok Artan</div>
@@ -910,7 +1471,47 @@ input:checked + .tgl-slider:before { transform: translateX(20px); }
 
     </div>
 </div>
+  <div id="page-news" class="page" style="padding:0;">
 
+    <div class="news-hero-section">
+        
+        <div class="news-search-box">
+            <i class="fas fa-search" style="color:var(--text-sub)"></i>
+            <input type="text" id="newsSearchInput" class="ns-input" placeholder="Haberlerde ara... (Örn: Fed, Altın)" onkeyup="if(event.key === 'Enter') runNewsSearch()">
+            <button class="ns-btn" onclick="runNewsSearch()"><i class="fas fa-arrow-right"></i></button>
+        </div>
+        
+        <div class="news-status-row">
+            <div class="status-badge">
+                <div class="dot-pulse"></div>
+                CANLI YAYIN
+            </div>
+            <button class="timer-btn" onclick="toggleAutoRefresh(this)">
+                <i class="fas fa-sync-alt fa-spin" id="refreshIcon"></i> 
+                <span id="refreshTimer">57s</span>
+            </button>
+        </div>
+
+        <div class="refresh-bar-container" style="margin:0;">
+            <div id="refreshBar" class="refresh-bar-fill"></div>
+        </div>
+
+        <div class="news-filter-chips">
+            <div class="nf-chip active" onclick="filterNews('GENEL', this)">🔥 Manşet</div>
+            <div class="nf-chip" onclick="filterNews('EKONOMİ', this)">Ekonomi</div>
+            <div class="nf-chip" onclick="filterNews('KRİPTO', this)">Kripto</div>
+            <div class="nf-chip" onclick="filterNews('BORSA', this)">Borsa</div>
+            <div class="nf-chip" onclick="filterNews('EMTİA', this)">Altın</div>
+        </div>
+    </div> 
+
+    <div id="newsTimeline" class="news-timeline-container">
+        <div style="text-align:center; padding:40px; color:var(--text-sub);">
+            <i class="fas fa-circle-notch fa-spin"></i> Yükleniyor...
+        </div>
+    </div>
+
+</div>
 
     <div id="page-analysis" class="page">
         <div style="margin-bottom: 20px;">
@@ -919,6 +1520,7 @@ input:checked + .tgl-slider:before { transform: translateX(20px); }
         </div>
 
         <div class="dashboard-container">
+            
             <div class="dash-card full-width">
                 <div class="metric-title">
                     <i class="fas fa-wallet"></i> TOPLAM NET VARLIK
@@ -942,12 +1544,49 @@ input:checked + .tgl-slider:before { transform: translateX(20px); }
 
             <div class="dash-card">
                 <div class="metric-title">NAKİT ORANI</div>
-                <div style="margin-top:auto;">
+                <div style="display:flex; flex-direction:column; height:100%; justify-content:center;">
                     <div class="metric-value" id="anCashRatioVal" style="font-size:20px;">--</div>
                     <div class="goal-wrapper" style="margin-top:5px;">
                         <div id="cashRatioBar" class="goal-fill" style="width:0%"></div>
                     </div>
                     <div style="font-size:10px; color:var(--text-sub); margin-top:5px;">Kasada: <span id="anCashRaw">--</span></div>
+                </div>
+            </div>
+
+            <div class="dash-card full-width" style="background: linear-gradient(145deg, #1e293b 0%, #0f172a 100%); border: 1px solid rgba(255,255,255,0.05);">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
+                    <div class="metric-title" style="margin:0;"><i class="fas fa-graduation-cap" style="color:var(--gold)"></i> TRADER KARNESİ</div>
+                    <div id="scoreBadge" style="background:rgba(255,255,255,0.1); padding:4px 10px; border-radius:8px; font-size:10px; font-weight:800; color:var(--text-sub);">VERİ YOK</div>
+                </div>
+
+                <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
+                    <div style="background:rgba(255,255,255,0.03); padding:10px; border-radius:10px; text-align:center;">
+                        <div style="font-size:9px; color:var(--text-sub); font-weight:700;">KÂR FAKTÖRÜ</div>
+                        <div id="pfScore" style="font-size:18px; font-weight:800; margin-top:2px;">--</div>
+                        <div id="pfDesc" style="font-size:9px; opacity:0.6;">Bekleniyor</div>
+                    </div>
+
+                    <div style="background:rgba(255,255,255,0.03); padding:10px; border-radius:10px; text-align:center;">
+                        <div style="font-size:9px; color:var(--text-sub); font-weight:700;">İŞLEM BEKLENTİSİ</div>
+                        <div id="expScore" style="font-size:18px; font-weight:800; margin-top:2px;">--</div>
+                        <div id="expDesc" style="font-size:9px; opacity:0.6;">Bekleniyor</div>
+                    </div>
+                    
+                    <div style="grid-column: span 2; background:rgba(255,255,255,0.03); padding:10px 15px; border-radius:10px; display:flex; justify-content:space-between; align-items:center;">
+                        <div style="text-align:left;">
+                            <div style="font-size:9px; color:var(--success); font-weight:700;">ORT. KAZANÇ</div>
+                            <div id="avgWinVal" style="font-size:14px; font-weight:800;">--</div>
+                        </div>
+                        <div style="height:25px; width:1px; background:rgba(255,255,255,0.1);"></div>
+                        <div style="text-align:right;">
+                            <div style="font-size:9px; color:var(--danger); font-weight:700;">ORT. KAYIP</div>
+                            <div id="avgLossVal" style="font-size:14px; font-weight:800;">--</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div style="font-size:9px; color:var(--text-sub); text-align:center; font-style:italic; margin-top:10px;">
+                    * Geçmiş satış işlemleriniz üzerinden hesaplanır.
                 </div>
             </div>
 
@@ -969,8 +1608,7 @@ input:checked + .tgl-slider:before { transform: translateX(20px); }
 
             <div class="dash-card full-width">
                 <div class="metric-title">EN ÇOK KAZANDIRANLAR</div>
-                <div id="topPerformersList">
-                    </div>
+                <div id="topPerformersList"></div>
             </div>
 
             <div class="dash-card full-width">
@@ -979,129 +1617,219 @@ input:checked + .tgl-slider:before { transform: translateX(20px); }
                     <canvas id="newAllocationChart"></canvas>
                 </div>
             </div>
-        </div>
         </div> 
+    </div>
 
-    <div id="page-settings" class="page">
-        
-        <div class="settings-tabs">
-            <div class="s-tab active" onclick="switchSettingsTab('profile', this)">PROFİL</div>
-            <div class="s-tab" onclick="switchSettingsTab('general', this)">GENEL</div>
-            <div class="s-tab" onclick="switchSettingsTab('notify', this)">BİLDİRİM</div>
-            <div class="s-tab" onclick="switchSettingsTab('history', this)">GEÇMİŞ</div>
-        </div>
+        <div id="page-settings" class="page" style="padding:0; background:var(--bg-body);">
+    <div class="app-settings-container" style="padding: 20px;">
 
-        <div id="set-profile" class="settings-content active">
-            <div class="profile-section">
-                <div class="profile-img-wrap">
-                    <img id="displayProfileImg" src="https://via.placeholder.com/150/1e2538/ffffff?text=USER" class="profile-img">
-                    <label class="profile-upload-btn"><i class="fas fa-camera"></i><input type="file" id="imgUploadInput" style="display:none;" accept="image/*" onchange="uploadProfileImg(this)"></label>
-                </div>
-                <div class="profile-name" id="displayProfileName">Misafir Kullanıcı</div>
-                <span class="profile-tag" id="displayProfileBio">Yatırımcı</span>
-                <div class="membership-badge" id="membershipBadge"><i class="fas fa-crown"></i> PRO ÜYE</div>
-            </div>
-            <div class="membership-card-pro"><div class="mc-left"><div class="mc-title">Üyelik Planı</div><div class="mc-sub">TradeMaster Pro (Ömür Boyu)</div></div><div style="color:var(--success); font-size:18px;"><i class="fas fa-check-circle"></i></div></div>
-            <div class="card">
-                <div class="lbl-sm">KİMLİK BİLGİLERİ</div>
-                <div style="margin-bottom:10px;"><span style="font-size:11px; color:var(--text-sub); display:block; margin-bottom:5px;">Ad Soyad / Ünvan</span><input type="text" id="profileNameInput" class="modern-input" placeholder="Adınızı giriniz..." onchange="saveProfileData()"></div>
-                <div><span style="font-size:11px; color:var(--text-sub); display:block; margin-bottom:5px;">Yatırım Felsefesi (Bio)</span><input type="text" id="profileBioInput" class="modern-input" placeholder="Örn: Uzun vadeci, Kripto uzmanı..." onchange="saveProfileData()"></div>
-            </div>
-            <div class="card">
-                <div class="lbl-sm">İSTATİSTİKLER</div>
-                <div class="stats-grid"><div class="stat-box"><span class="stat-label">İŞLEM SAYISI</span><div class="stat-val" id="profileTradeCount">0</div></div><div class="stat-box"><span class="stat-label">KAYIT TARİHİ</span><div class="stat-val" id="profileJoinDate">--</div></div></div>
-            </div>
-        </div>
-
-        <div id="set-general" class="settings-content">
-            <div class="card">
-                <div class="lbl-sm" data-lang="pref">TERCİHLER</div>
-                <div class="setting-item"><span>Para Birimi</span><select id="currSelect" class="setting-select" onchange="changeBaseCurrency(this.value)"><option value="TRY">TRY (₺)</option><option value="USD">USD ($)</option></select></div>
-                <div class="setting-item"><span>Dil</span><select id="langSelect" class="setting-select" onchange="changeLanguage(this.value)"><option value="tr">Türkçe</option><option value="en">English</option></select></div>
-                <div class="setting-item"><span>Tema</span><select id="themeSelect" class="setting-select" onchange="changeTheme(this.value)"><option value="ocean">Okyanus</option><option value="purple">Mor Gece</option><option value="dark">Zifiri</option></select></div>
-            </div>
-            <div class="card" style="border-left: 3px solid var(--accent);">
-                <div class="lbl-sm">VERİ SAĞLAYICI (POLYGON.IO)</div>
-                <div class="setting-item" style="display:block; border:none; padding-bottom:0;">
-                    <div style="margin-bottom:5px; font-size:12px; display:flex; justify-content:space-between;"><span>API Key (Ücretsiz Plan)</span><span id="polyStatusText" style="font-size:10px; font-weight:700; color:var(--text-sub);">DURUM: BEKLİYOR</span></div>
-                    <div class="poly-wrapper"><div id="polyIndicator" class="poly-status-dot idle"></div><input type="text" id="polyKey" class="modern-input" style="margin:0; font-size:12px;" placeholder="Polygon.io Key Yapıştır..." onchange="savePolyKey(this.value)"><button class="btn-main" style="width:auto; padding:0 15px; height:46px;" onclick="testPolygonConnection()"><i class="fas fa-sync-alt"></i></button></div>
-                </div>
-            </div>
-            <div class="card">
-                <div class="lbl-sm" data-lang="data_mgmt">VERİ YÖNETİMİ</div>
-                <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px; margin-bottom:10px;"><button class="btn-main btn-sec" onclick="downloadBackup()">Yedekle</button><label class="btn-main btn-sec" style="margin:0;">Yükle <input type="file" style="display:none;" onchange="uploadBackup(this)"></label></div><button class="btn-main btn-sec" onclick="exportExcel()">Excel İndir</button>
-            </div>
-            <button class="btn-main btn-danger" onclick="clearAllData()">Tüm Verileri Sıfırla</button>
-        </div>
-
-        <div id="set-notify" class="settings-content">
-            <div class="card" id="permRequestCard" style="display:none; border-left: 3px solid var(--gold); background:rgba(245, 158, 11, 0.1);">
-                <div style="display:flex; justify-content:space-between; align-items:center;">
-                    <div>
-                        <div style="font-weight:700; font-size:13px; color:var(--gold);">İzin Gerekli</div>
-                        <div style="font-size:11px; color:var(--text-sub);">Telefon bildirimleri için izin verin.</div>
-                    </div>
-                    <button class="btn-main" style="width:auto; padding:6px 12px; font-size:11px;" onclick="requestNotifyPermission()">İZİN VER</button>
-                </div>
-            </div>
-
-            <div class="card">
-                <div class="lbl-sm">BİLDİRİM TERCİHLERİ</div>
-                <div class="switch-row">
-                    <div><span class="switch-label">Fiyat Alarmları</span><span class="switch-desc">Hedef fiyata gelince uyar</span></div>
-                    <label class="tgl-switch"><input type="checkbox" id="ntf_price" onchange="saveNotifySettings()"><span class="tgl-slider"></span></label>
-                </div>
-                <div class="switch-row">
-                    <div><span class="switch-label">İşlem Onayları</span><span class="switch-desc">Alım/Satım yapınca uyar</span></div>
-                    <label class="tgl-switch"><input type="checkbox" id="ntf_trade" onchange="saveNotifySettings()"><span class="tgl-slider"></span></label>
-                </div>
-                <div class="switch-row">
-                    <div><span class="switch-label">Haber & Piyasalar</span><span class="switch-desc">Önemli gelişmelerde uyar</span></div>
-                    <label class="tgl-switch"><input type="checkbox" id="ntf_news" onchange="saveNotifySettings()"><span class="tgl-slider"></span></label>
-                </div>
-            </div>
-
-            <div class="card">
-                <div class="lbl-sm">SES & TİTREŞİM</div>
-                <div class="switch-row">
-                    <div><span class="switch-label">Bildirim Sesi</span><span class="switch-desc">Uyarılarda ses çal ("Ding")</span></div>
-                    <label class="tgl-switch"><input type="checkbox" id="ntf_sound" onchange="saveNotifySettings()"><span class="tgl-slider"></span></label>
-                </div>
-                <div class="switch-row">
-                    <div><span class="switch-label">Titreşim</span><span class="switch-desc">Telefonda titreşim oluştur</span></div>
-                    <label class="tgl-switch"><input type="checkbox" id="ntf_vibrate" onchange="saveNotifySettings()"><span class="tgl-slider"></span></label>
-                </div>
-            </div>
+        <div id="settings-home" class="settings-home-wrapper">
             
-            <button class="btn-main btn-sec" onclick="testNotification()">Test Bildirimi Gönder</button>
-        </div>
-
-        <div id="set-history" class="settings-content">
-            <div class="accounting-header">
-                <div style="display:flex; justify-content:space-between; align-items:center;">
-                    <div class="lc-title" style="font-size:14px;"><i class="fas fa-file-invoice-dollar"></i> KASA HAREKETLERİ</div>
-                    <button class="tool-btn" onclick="openCashModal()" style="color:var(--accent); background:rgba(59,130,246,0.1); padding:5px 10px; border-radius:6px; font-weight:700;">+ İşlem Ekle</button>
-                </div>
-                <div class="acc-grid">
-                    <div class="acc-item"><span class="acc-lbl">TOPLAM GİRİŞ</span><span class="acc-val" style="color:var(--success)" id="accTotalIn">0.00</span></div>
-                    <div class="acc-item"><span class="acc-lbl">TOPLAM ÇIKIŞ</span><span class="acc-val" style="color:var(--danger)" id="accTotalOut">0.00</span></div>
-                    <div class="acc-item acc-net"><span class="acc-lbl">NET NAKİT AKIŞI</span><span class="acc-val" id="accNetFlow">0.00</span></div>
+            <div id="mainProfileCard" class="profile-banner-card" onclick="openSubPage('profile')">
+                <img id="menuProfileImg" 
+                     src="https://via.placeholder.com/150/1e2538/ffffff?text=TR" 
+                     class="pbc-img"
+                     onerror="this.src='https://via.placeholder.com/150/1e2538/ffffff?text=USER'">
+                
+                <div class="pbc-info">
+                    <span class="pbc-name" id="menuProfileName">Yükleniyor...</span>
+                    <div class="pbc-badge"><i class="fas fa-crown"></i> PRO ÜYE</div>
                 </div>
             </div>
 
-            <div class="hist-filter-scroll">
-                <div class="h-filter-btn active" onclick="filterHistory('all', this)">Tümü</div>
-                <div class="h-filter-btn" onclick="filterHistory('NAKİT', this)">Kasa</div>
-                <div class="h-filter-btn" onclick="filterHistory('ALIM', this)">Alımlar</div>
-                <div class="h-filter-btn" onclick="filterHistory('SATIM', this)">Satışlar</div>
-                <div class="h-filter-btn" onclick="filterHistory('TEMETTÜ', this)">Temettü</div>
-            </div>
+            <div style="font-size:11px; font-weight:700; color:var(--text-sub); margin-bottom:10px; margin-left:10px;">UYGULAMA AYARLARI</div>
+            
+            <div class="menu-list-wrapper">
+    <div class="menu-list-item" onclick="openSubPage('general')">
+        <div class="mli-left">
+            <div class="mli-icon-box bg-blue"><i class="fas fa-sliders-h"></i></div>
+            <span class="mli-text">Genel & Görünüm</span>
+        </div>
+        <div class="mli-arrow"><i class="fas fa-chevron-right"></i></div>
+    </div>
 
-            <div id="historyListFull" style="padding-bottom:20px;"></div>
+    <div class="menu-list-item" onclick="openSubPage('notify')">
+        <div class="mli-left">
+            <div class="mli-icon-box bg-orange"><i class="fas fa-bell"></i></div>
+            <span class="mli-text">Bildirimler</span>
+        </div>
+        <div class="mli-arrow"><i class="fas fa-chevron-right"></i></div>
+    </div>
+
+    <div class="menu-list-item" onclick="openSubPage('history')">
+        <div class="mli-left">
+            <div class="mli-icon-box bg-green"><i class="fas fa-history"></i></div>
+            <span class="mli-text">Kasa & Geçmiş</span>
+        </div>
+        <div class="mli-arrow"><i class="fas fa-chevron-right"></i></div>
+    </div>
+</div>
+
+<div style="font-size:11px; font-weight:700; color:var(--text-sub); margin:15px 0 10px 10px;">DESTEK & YASAL</div>
+
+<div class="menu-list-wrapper">
+    <div class="menu-list-item" onclick="document.getElementById('feedbackModal').style.display='flex'">
+        <div class="mli-left">
+            <div class="mli-icon-box" style="background: linear-gradient(135deg, #8b5cf6, #7c3aed);"><i class="fas fa-comment-dots"></i></div>
+            <span class="mli-text">Geri Bildirim Gönder</span>
+        </div>
+        <div class="mli-arrow"><i class="fas fa-chevron-right"></i></div>
+    </div>
+
+    <div class="menu-list-item" onclick="document.getElementById('legalModal').style.display='flex'">
+        <div class="mli-left">
+            <div class="mli-icon-box" style="background: linear-gradient(135deg, #64748b, #475569);"><i class="fas fa-balance-scale"></i></div>
+            <span class="mli-text">Yasal Uyarı (Disclaimer)</span>
+        </div>
+        <div class="mli-arrow"><i class="fas fa-chevron-right"></i></div>
+    </div>
+</div>
+
+<div class="menu-list-wrapper" style="margin-top:20px; margin-bottom: 120px;">
+    <div class="menu-list-item" onclick="clearAllData()">
+        <div class="mli-left">
+            <div class="mli-icon-box bg-red"><i class="fas fa-trash-alt"></i></div>
+            <span class="mli-text" style="color:#ef4444;" data-lang="reset_data">Verileri Sıfırla</span>
+        </div>
+    </div>
+</div>
+
+
         </div>
 
-    </div> </div> ```
+        <div id="settings-detail" class="settings-detail-wrapper">
+            
+            <div class="sub-header">
+                <button class="back-btn" onclick="closeSubPage()">
+                    <i class="fas fa-chevron-left"></i> Geri
+                </button>
+                <span class="sub-title" id="subPageTitle">Detay</span>
+            </div>
 
+            <div id="set-profile" class="settings-content" style="display:none;">
+                <div style="text-align:center; margin-bottom:20px;">
+                    <div class="profile-img-wrap" style="margin:0 auto 10px auto;">
+                        <img id="displayProfileImg" src="" class="profile-img">
+                        <label class="profile-upload-btn"><i class="fas fa-camera"></i><input type="file" id="imgUploadInput" style="display:none;" accept="image/*" onchange="uploadProfileImg(this)"></label>
+                    </div>
+                    <div style="font-size:11px; color:var(--text-sub);">Fotoğrafı güncellemek için ikona tıkla</div>
+                </div>
+
+                <div class="card">
+                    <div class="lbl-sm">BİLGİLER</div>
+                    <div style="margin-bottom:15px;">
+                        <span style="font-size:11px; color:var(--text-sub); display:block; margin-bottom:5px;">Ad Soyad</span>
+                        <input type="text" id="profileNameInput" class="modern-input" onchange="saveProfileData()">
+                    </div>
+                    <div>
+                        <span style="font-size:11px; color:var(--text-sub); display:block; margin-bottom:5px;">Bio / Ünvan</span>
+                        <input type="text" id="profileBioInput" class="modern-input" onchange="saveProfileData()">
+                    </div>
+                    <div id="displayProfileName" style="display:none;"></div>
+                    <div id="displayProfileBio" style="display:none;"></div>
+                    <div id="membershipBadge" style="display:none;"></div>
+                </div>
+
+                <div class="card">
+                    <div class="lbl-sm">İSTATİSTİKLER</div>
+                    <div class="stats-grid">
+                        <div class="stat-box"><span class="stat-label">İŞLEM</span><div class="stat-val" id="profileTradeCount">0</div></div>
+                        <div class="stat-box"><span class="stat-label">TARİH</span><div class="stat-val" id="profileJoinDate">--</div></div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="set-general" class="settings-content" style="display:none;">
+                <div class="card">
+                    <div class="lbl-sm">TERCİHLER</div>
+                    <div class="setting-item"><span>Para Birimi</span><select id="currSelect" class="setting-select" onchange="changeBaseCurrency(this.value)"><option value="TRY">TRY (₺)</option><option value="USD">USD ($)</option></select></div>
+                    <div class="setting-item"><span>Dil</span><select id="langSelect" class="setting-select" onchange="changeLanguage(this.value)"><option value="tr">Türkçe</option><option value="en">English</option></select></div>
+                    <div class="setting-item"><span>Tema</span><select id="themeSelect" class="setting-select" onchange="changeTheme(this.value)"><option value="ocean">Okyanus</option><option value="purple">Mor Gece</option><option value="dark">Zifiri</option></select></div>
+                </div>
+                <div class="card">
+                    <div class="lbl-sm">VERİ API</div>
+                    <div style="display:flex; justify-content:space-between; margin-bottom:5px;"><span id="polyStatusText" style="font-size:10px;">DURUM: BEKLİYOR</span><div id="polyIndicator" class="poly-status-dot idle"></div></div>
+                    <input type="text" id="polyKey" class="modern-input" placeholder="API Key..." onchange="savePolyKey(this.value)">
+                    <button class="btn-main" onclick="testPolygonConnection()">Bağlantıyı Test Et</button>
+                </div>
+                <div class="card">
+                    <div class="lbl-sm">YEDEKLEME</div>
+                    <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px; margin-bottom:10px;">
+                        <button class="btn-main btn-sec" onclick="downloadBackup()">İndir</button>
+                        <label class="btn-main btn-sec" style="margin:0;">Yükle <input type="file" style="display:none;" onchange="uploadBackup(this)"></label>
+                    </div>
+                    <button class="btn-main btn-sec" onclick="exportExcel()">Excel Raporu</button>
+                    <div style="margin-top:15px; padding-top:15px; border-top:1px solid rgba(255,255,255,0.1);">
+    <div class="lbl-sm" style="margin-bottom:10px;"><i class="fab fa-google-drive"></i> GOOGLE DRIVE YEDEKLEME</div>
+    <div id="drive-status" style="font-size:10px; color:var(--text-sub); margin-bottom:5px;">Bağlantı Bekleniyor...</div>
+    <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
+        <button class="btn-main" style="background:#1f2937; border:1px solid rgba(255,255,255,0.1);" onclick="handleAuthClick()">
+            <i class="fas fa-sign-in-alt"></i> Giriş Yap
+        </button>
+        <button class="btn-main" style="background:#1f2937; border:1px solid rgba(255,255,255,0.1);" onclick="handleSignoutClick()">
+            <i class="fas fa-sign-out-alt"></i> Çıkış
+        </button>
+    </div>
+    <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px; margin-top:10px;">
+        <button class="btn-main" style="background:#10b981;" onclick="uploadToDrive()">
+            <i class="fas fa-cloud-upload-alt"></i> Buluta Yedekle
+        </button>
+        <button class="btn-main" style="background:#3b82f6;" onclick="downloadFromDrive()">
+            <i class="fas fa-cloud-download-alt"></i> Buluttan Yükle
+        </button>
+        <div style="height: 80px; width: 100%; clear: both;"></div>
+
+    </div>
+</div>
+
+                </div>
+            </div>
+
+            <div id="set-notify" class="settings-content" style="display:none;">
+                <div class="card" id="permRequestCard" style="display:none; background:rgba(245, 158, 11, 0.1); border-left:3px solid var(--gold);">
+                    <div style="display:flex; justify-content:space-between; align-items:center;">
+                        <div style="font-size:12px; color:var(--gold); font-weight:700;">İzin Gerekli</div>
+                        <button class="btn-main" style="width:auto; padding:5px 10px; font-size:10px;" onclick="requestNotifyPermission()">İZİN VER</button>
+                    </div>
+                </div>
+                <div class="card">
+                    <div class="switch-row"><div><span class="switch-label">Fiyat Alarmları</span></div><label class="tgl-switch"><input type="checkbox" id="ntf_price" onchange="saveNotifySettings()"><span class="tgl-slider"></span></label></div>
+                    <div class="switch-row"><div><span class="switch-label">İşlem Onayları</span></div><label class="tgl-switch"><input type="checkbox" id="ntf_trade" onchange="saveNotifySettings()"><span class="tgl-slider"></span></label></div>
+                    <div class="switch-row"><div><span class="switch-label">Haberler</span></div><label class="tgl-switch"><input type="checkbox" id="ntf_news" onchange="saveNotifySettings()"><span class="tgl-slider"></span></label></div>
+                </div>
+                <div class="card">
+                    <div class="switch-row"><div><span class="switch-label">Ses</span></div><label class="tgl-switch"><input type="checkbox" id="ntf_sound" onchange="saveNotifySettings()"><span class="tgl-slider"></span></label></div>
+                    <div class="switch-row"><div><span class="switch-label">Titreşim</span></div><label class="tgl-switch"><input type="checkbox" id="ntf_vibrate" onchange="saveNotifySettings()"><span class="tgl-slider"></span></label></div>
+                </div>
+                <button class="btn-main btn-sec" onclick="testNotification()">Test Bildirimi</button>
+            </div>
+
+            <div id="set-history" class="settings-content" style="display:none;">
+                <div class="accounting-header">
+                    <div style="display:flex; justify-content:space-between; align-items:center;">
+                        <div class="lc-title">KASA</div>
+                        <button class="tool-btn" onclick="openCashModal()" style="background:rgba(255,255,255,0.1); color:white; padding:5px 10px; border-radius:8px;">+ Ekle</button>
+                    </div>
+                    <div class="acc-grid">
+                        <div class="acc-item"><span class="acc-lbl">GİRİŞ</span><span class="acc-val" id="accTotalIn" style="color:var(--success)">0</span></div>
+                        <div class="acc-item"><span class="acc-lbl">ÇIKIŞ</span><span class="acc-val" id="accTotalOut" style="color:var(--danger)">0</span></div>
+                        <div class="acc-item acc-net"><span class="acc-lbl">NET</span><span class="acc-val" id="accNetFlow">0</span></div>
+                    </div>
+                </div>
+                <div class="hist-filter-scroll">
+                    <div class="h-filter-btn active" onclick="filterHistory('all', this)">Tümü</div>
+                    <div class="h-filter-btn" onclick="filterHistory('NAKİT', this)">Kasa</div>
+                    <div class="h-filter-btn" onclick="filterHistory('ALIM', this)">Alım</div>
+                    <div class="h-filter-btn" onclick="filterHistory('SATIM', this)">Satım</div>
+                </div>
+                <button class="btn-main btn-sec" style="margin-bottom:10px; border:1px dashed var(--text-sub);" onclick="openManualHistoryModal()">Manuel Ekle</button>
+                <div id="historyListFull"></div>
+            </div>
+
+        </div>
+
+    </div> 
+</div>
 
 <div class="nav-container">
     <div class="nav-item active" onclick="switchPage('portfolio', this)"><i class="fas fa-wallet"></i><span data-lang="nav_wallet">Cüzdan</span></div>
@@ -1135,6 +1863,90 @@ input:checked + .tgl-slider:before { transform: translateX(20px); }
             <button class="btn-main btn-sec" onclick="document.getElementById('sellModal').style.display='none'">İptal</button>
             <button class="btn-main" onclick="confirmSell()">SATIŞI ONAYLA</button>
         </div>
+    </div>
+</div>
+
+<div id="legalModal" class="modal-overlay">
+    <div class="modal" style="max-height: 80vh; overflow-y: auto;">
+        <h3 style="text-align:center; color:var(--text-sub); margin-bottom:15px;"><i class="fas fa-balance-scale"></i> Yasal Uyarı</h3>
+        <div style="font-size:11px; line-height:1.6; color:var(--text-sub); text-align:justify;">
+            <p style="margin-bottom:10px;"><strong>Burada yer alan yatırım bilgi, yorum ve tavsiyeleri yatırım danışmanlığı kapsamında değildir.</strong></p>
+            <p style="margin-bottom:10px;">Yatırım danışmanlığı hizmeti; aracı kurumlar, portföy yönetim şirketleri, mevduat kabul etmeyen bankalar ile müşteri arasında imzalanacak yatırım danışmanlığı sözleşmesi çerçevesinde sunulmaktadır.</p>
+            <p style="margin-bottom:10px;">Burada yer alan yorum ve tavsiyeler, yorum ve tavsiyede bulunanların kişisel görüşlerine dayanmaktadır. Bu görüşler mali durumunuz ile risk ve getiri tercihlerinize uygun olmayabilir.</p>
+            <p>Bu nedenle, sadece burada yer alan bilgilere dayanılarak yatırım kararı verilmesi beklentilerinize uygun sonuçlar doğurmayabilir. TradeMaster uygulaması bir simülasyon ve takip aracıdır, gerçek piyasa emri iletmez.</p>
+        </div>
+        <button class="btn-main btn-sec" style="margin-top:15px;" onclick="document.getElementById('legalModal').style.display='none'">Okudum, Anladım</button>
+    </div>
+</div>
+
+<div id="feedbackModal" class="modal-overlay">
+    <div class="modal">
+        <h3 style="text-align:center; margin-bottom:15px;">Bize Ulaşın</h3>
+        <p style="font-size:12px; color:var(--text-sub); text-align:center; margin-bottom:15px;">Hata bildirimi, özellik isteği veya görüşleriniz için yazabilirsiniz.</p>
+        
+        <div style="margin-bottom:10px;">
+            <span style="font-size:11px; color:var(--text-sub);">Konu</span>
+            <select id="fbSubject" class="modern-input">
+                <option>Hata Bildirimi (Bug)</option>
+                <option>Özellik İsteği</option>
+                <option>Teşekkür / Diğer</option>
+            </select>
+        </div>
+        
+        <div style="margin-bottom:10px;">
+            <span style="font-size:11px; color:var(--text-sub);">Mesajınız</span>
+            <textarea id="fbMessage" class="modern-input" rows="4" placeholder="Mesajınızı buraya yazın..."></textarea>
+        </div>
+
+        <button class="btn-main" onclick="sendFeedback()">GÖNDER</button>
+        <button class="btn-main btn-sec" style="margin-top:10px;" onclick="document.getElementById('feedbackModal').style.display='none'">Vazgeç</button>
+    </div>
+</div>
+
+
+<div id="manualHistoryModal" class="modal-overlay">
+    <div class="modal">
+        <h3 style="text-align:center; margin-bottom:15px;">Geçmiş İşlem Ekle</h3>
+        
+        <div style="background:rgba(245, 158, 11, 0.1); padding:10px; border-radius:8px; font-size:11px; color:var(--gold); margin-bottom:15px; line-height:1.4;">
+            <i class="fas fa-info-circle"></i> Bu özellik sadece <b>Geçmiş</b> ve <b>Trader Karnesi</b> verilerini etkiler. Cüzdan bakiyenizi veya portföyünüzü değiştirmez.
+        </div>
+
+        <div class="sim-tab-group">
+            <div class="sim-tab active" onclick="setManualType('ALIM', this)">ALIM</div>
+            <div class="sim-tab" onclick="setManualType('SATIM', this)">SATIM</div>
+        </div>
+        <input type="hidden" id="manualType" value="ALIM">
+
+        <div class="input-row">
+            <div>
+                <span style="font-size:11px; color:var(--text-sub);">Sembol</span>
+                <input type="text" id="manualSym" class="modern-input" placeholder="BTC, THYAO..." style="text-transform:uppercase;">
+            </div>
+            <div>
+                <span style="font-size:11px; color:var(--text-sub);">Tarih</span>
+                <input type="date" id="manualDate" class="modern-input" style="padding: 10px;">
+            </div>
+        </div>
+
+        <div class="input-row">
+            <div>
+                <span style="font-size:11px; color:var(--text-sub);">Adet</span>
+                <input type="number" id="manualAmt" class="modern-input" placeholder="0">
+            </div>
+            <div>
+                <span style="font-size:11px; color:var(--text-sub);">Fiyat</span>
+                <input type="number" id="manualPrice" class="modern-input" placeholder="0.00">
+            </div>
+        </div>
+
+        <div id="manualCostArea" style="display:none; margin-top:5px;">
+            <span style="font-size:11px; color:var(--text-sub);">Bu malı kaçtan almıştınız? (Kâr Hesabı İçin)</span>
+            <input type="number" id="manualBuyCost" class="modern-input" placeholder="Alış Maliyeti Giriniz">
+        </div>
+
+        <button class="btn-main" style="margin-top:15px;" onclick="saveManualHistory()">KAYDET</button>
+        <button class="btn-main btn-sec" style="margin-top:10px;" onclick="document.getElementById('manualHistoryModal').style.display='none'">İptal</button>
     </div>
 </div>
 
@@ -1299,6 +2111,79 @@ input:checked + .tgl-slider:before { transform: translateX(20px); }
     </div>
 </div>
 
+<div id="newsRedirectModal" class="modal-overlay" style="align-items: center; justify-content: center; backdrop-filter: blur(5px);">
+    
+    <div class="modal market-sheet" style="padding: 0; width: 90%; max-width: 360px; height: 65vh; border-radius: 24px; overflow: hidden; display: flex; flex-direction: column; background: #151b2b; border: 1px solid rgba(255,255,255,0.08); box-shadow: 0 20px 40px rgba(0,0,0,0.6);">
+        
+        <div style="flex: 1; padding: 16px; display: flex; flex-direction: column; background: #151b2b;">
+            
+            <div id="newsAdSpace" style="
+                flex: 1; 
+                width: 100%; 
+                background: rgba(0, 0, 0, 0.2); /* Daha koyu ve nötr zemin */
+                border-radius: 16px; 
+                border: 2px dashed rgba(255, 255, 255, 0.1); /* Göze batmayan çerçeve */
+                display: flex; 
+                align-items: center; 
+                justify-content: center; 
+                flex-direction: column;
+                margin-bottom: 15px;
+                position: relative;
+                overflow: hidden;">
+                
+                <div style="width: 60px; height: 60px; border-radius: 50%; background: rgba(255, 255, 255, 0.05); display: flex; align-items: center; justify-content: center;">
+                    <i class="fas fa-ad" style="font-size: 24px; color: var(--text-sub); opacity: 0.5;"></i>
+                </div>
+                
+                <span style="font-size: 10px; color: var(--text-sub); opacity: 0.5; font-weight: 700; margin-top: 15px; letter-spacing: 1px;">REKLAM</span>
+            </div>
+
+            <div style="flex-shrink: 0; display: flex; gap: 10px; height: 44px;">
+                
+                <button onclick="closeNewsModal()" style="
+                    flex: 1;
+                    height: 100%;
+                    background: #1e2538; /* Uygulama input rengi */
+                    color: #94a3b8;      /* Uygulama yan metin rengi */
+                    border: 1px solid rgba(255,255,255,0.05);
+                    border-radius: 12px;
+                    font-weight: 600;
+                    font-size: 12px;
+                    cursor: pointer;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    transition: 0.2s;">
+                    Vazgeç
+                </button>
+
+                <button onclick="proceedToNews()" style="
+                    flex: 2;
+                    height: 100%;
+                    background: #3b82f6; /* TradeMaster Mavisi */
+                    color: white;
+                    border: none;
+                    border-radius: 12px;
+                    font-weight: 700;
+                    font-size: 13px;
+                    cursor: pointer;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    gap: 8px;
+                    box-shadow: 0 4px 10px rgba(0,0,0,0.2); /* Hafif gölge */
+                    transition: 0.1s;">
+                    <span>Kaynağa Git</span>
+                    <i class="fas fa-chevron-right" style="font-size: 10px;"></i>
+                </button>
+            </div>
+            
+            <div style="text-align: center; margin-top: 10px;">
+                <span style="font-size: 9px; color: var(--text-sub); opacity: 0.3;">Güvenli Bağlantı</span>
+            </div>
+        </div>
+    </div>
+</div>
 
 
 <script>
@@ -1360,7 +2245,8 @@ let notifySettings = JSON.parse(localStorage.getItem('tm_notify_settings')) || {
         });
 
 
-        setTimeout(() => { hideSplashScreen(); }, 1500); 
+       setTimeout(() => { hideSplashScreen(); }, 3500); 
+
 
         renderHistory();
         setEntryCurrency('TRY'); 
@@ -1374,18 +2260,44 @@ let notifySettings = JSON.parse(localStorage.getItem('tm_notify_settings')) || {
         }
     }
 
-    /* --- SAYFA GEÇİŞLERİ --- */
-    function switchPage(p, btn){ 
-        document.querySelectorAll('.page').forEach(x=>x.classList.remove('active')); 
-        document.getElementById('page-'+p).classList.add('active'); 
-        document.querySelectorAll('.nav-item').forEach(x=>x.classList.remove('active')); 
-        if(btn) btn.classList.add('active'); 
-        
-        if(p==='market') switchMarketMode('main', document.querySelector('.ms-btn')); 
-        if(p==='analysis') { renderAnalyticsPage(); } 
-        if(p==='news') fetchNewsCustom(); 
-        if(p==='notifications') renderNotifications(); 
+   /* --- GÜNCELLENMİŞ SAYFA GEÇİŞ FONKSİYONU --- */
+function switchPage(p, btn){ 
+    // 1. Sayfa Görünürlüğünü Ayarla
+    document.querySelectorAll('.page').forEach(x=>x.classList.remove('active')); 
+    document.getElementById('page-'+p).classList.add('active'); 
+    
+    // 2. Alt Menü İkonunu Aktif Yap
+    document.querySelectorAll('.nav-item').forEach(x=>x.classList.remove('active')); 
+    if(btn) btn.classList.add('active'); 
+    
+    // 3. Sayfaya Özel İşlemler
+    if(p==='market') switchMarketMode('main', document.querySelector('.ms-btn')); 
+    if(p==='analysis') { renderAnalyticsPage(); } 
+    
+    // --- BURASI DEĞİŞTİ (YENİ HABER TETİKLEYİCİSİ) ---
+    if(p==='news') {
+        // Eğer haberler hiç yüklenmediyse veya "Yükleniyor" yazıyorsa sistemi başlat
+        const tl = document.getElementById('newsTimeline');
+        if(tl && (tl.innerHTML.trim() === "" || tl.innerHTML.includes('Yükleniyor'))) {
+            initNewsSystem();
+        } else {
+            // Zaten yüklüyse sadece sayacı devam ettir
+            startNewsTimer();
+        }
+    } else {
+        // Haber sayfasından çıkınca sayacı durdur (Performans tasarrufu)
+        clearInterval(newsInterval);
     }
+    // ------------------------------------------------
+    
+    if(p==='notifications') renderNotifications(); 
+    
+    // Manuel Geri Butonu Kontrolü (Varsa)
+    const backBtn = document.getElementById('manualBackBtn');
+    if(backBtn) {
+        backBtn.style.display = (p === 'portfolio') ? 'none' : 'flex';
+    }
+}
 
     /* --- CANLI GÜNCELLEME MOTORU --- */
     function startLiveUpdates() {
@@ -1451,28 +2363,57 @@ let notifySettings = JSON.parse(localStorage.getItem('tm_notify_settings')) || {
         }, 5000); 
     }
     /* --- PORTFÖY VE FİYAT FONKSİYONLARI --- */
-   /* --- GÜNCELLENMİŞ FİYAT MOTORU (SEMBOL DÜZELTMELİ) --- */
+   /* --- FİYAT MOTORU (ÖNCELİK: COINGECKO API & ALTIN) --- */
 async function getPrice(s) {
     s = s.toUpperCase().trim(); 
     if(!s) return { price: 0, origin: 'TRY', change: 0 };
 
-    // 1. Binance Dene
-    if(s.includes('USDT') || s.includes('BUSD') || (!s.includes('=') && !s.includes('.IS') && !s.includes('USD') && !s.includes('EUR') && s.length <= 8)) {
-         let res = await tryBinance(s); 
-         if(res) return res; 
+    // 1. ÖZEL ALTIN TANIMLARI (Çeyrek, Gram vb. için)
+    const goldKeywords = [
+        { key: 'ONS', type: 'ONS', factor: 0 }, 
+        { key: 'GRAM HAS', type: 'GRAM24', factor: 1 },
+        { key: '24K', type: 'GRAM24', factor: 1 },
+        { key: '22 AYAR', type: 'GRAM22', factor: 0.916 },
+        { key: 'ÇEYREK', type: 'CEYREK', factor: 1.635 },
+        { key: 'YARIM', type: 'YARIM', factor: 3.27 },
+        { key: 'TAM', type: 'TAM', factor: 6.54 },
+        { key: 'CUMHURİYET', type: 'ATA', factor: 6.72 },
+        { key: 'ATA', type: 'ATA', factor: 6.72 }
+    ];
+
+    const goldMatch = goldKeywords.find(k => s.includes(k.key));
+    if (goldMatch) {
+        try {
+            const res = await fetch('https://api.binance.com/api/v3/ticker/24hr?symbols=["PAXGUSDT","USDTTRY"]');
+            const data = await res.json();
+            const paxg = data.find(x => x.symbol === 'PAXGUSDT');
+            const usdt = data.find(x => x.symbol === 'USDTTRY');
+            if (paxg && usdt) {
+                const ons = parseFloat(paxg.lastPrice);
+                const usdTry = parseFloat(usdt.lastPrice);
+                const change = parseFloat(paxg.priceChangePercent);
+                const gramTL = (ons * usdTry) / 31.1035;
+                let finalPrice = (goldMatch.type === 'ONS') ? ons : (gramTL * goldMatch.factor);
+                let originCurrency = (goldMatch.type === 'ONS') ? 'USD' : 'TRY';
+                
+                // Basit Altın İkonları
+                let icon = "data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect x='8' y='16' width='48' height='32' fill='%23FFD700' stroke='%23DAA520' stroke-width='2'/%3E%3C/svg%3E";
+                if(goldMatch.type === 'GRAM22') icon = "data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Ccircle cx='32' cy='32' r='26' fill='none' stroke='%23FFD700' stroke-width='8'/%3E%3C/svg%3E"; 
+                else if(goldMatch.type !== 'ONS' && goldMatch.type !== 'GRAM24') icon = "data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Ccircle cx='32' cy='32' r='28' fill='%23FFD700' stroke='%23DAA520' stroke-width='2'/%3E%3C/svg%3E"; 
+
+                return { price: finalPrice, origin: originCurrency, change: change, source: 'KUYUMCU', image: icon, correctedSymbol: s };
+            }
+        } catch(e) {}
     }
 
-    // 2. Polygon Dene
-    if(polyApiKey) { 
-        let res = await tryPolygon(s); 
-        if(res) return res; 
+    // 2. HİSSE SENEDİ KONTROLÜ (.IS)
+    if (s.includes('.IS') || (s.includes('.') && s.length <= 6)) {
+        let res = await tryYahoo(s);
+        if(res) return res;
     }
 
-    // 3. Yahoo Dene
-    let res = await tryYahoo(s); 
-    if(res) return res;
-
-    // 4. COINGECKO (SEMBOL DÜZELTMELİ) 🚀
+    // --- 3. COINGECKO (KRİPTO İÇİN İLK SIRADA!) ---
+    // Elimizdeki API Key ile en geniş arama burada yapılır.
     if(coingeckoApiKey) {
         try {
             const searchUrl = `https://api.coingecko.com/api/v3/search?query=${s}&x_cg_demo_api_key=${coingeckoApiKey}`;
@@ -1493,21 +2434,32 @@ async function getPrice(s) {
                             price: priceData[coin.id].usd, 
                             origin: 'USD', 
                             change: priceData[coin.id].usd_24h_change, 
-                            source: 'CG', 
-                            image: coin.thumb,
-                            // KRİTİK NOKTA: Sembolü buradan alıp düzeltiyoruz
+                            source: 'CG', // CoinGecko Kaynaklı
+                            image: coin.thumb, // Orijinal Logo
                             correctedSymbol: coin.symbol.toUpperCase() 
                         };
                     }
                 }
             }
-        } catch(e) { console.log("CG Hatası"); }
+        } catch(e) { console.log("CG Hatası, yedeğe geçiliyor..."); }
     }
+
+    // --- 4. YEDEKLER (Binance, Polygon, Yahoo) ---
+    if(s.includes('USDT') || (!s.includes('=') && !s.includes('USD') && !s.includes('EUR'))) {
+         let res = await tryBinance(s); 
+         if(res) return res; 
+    }
+
+    if(polyApiKey) { 
+        let res = await tryPolygon(s); 
+        if(res) return res; 
+    }
+    
+    let res = await tryYahoo(s); 
+    if(res) return res;
 
     return { price: 0, origin: 'TRY', change: 0 };
 }
-
-
 
     async function tryBinance(symbol) {
         let s = symbol.replace('BINANCE:', '').trim();
@@ -1800,12 +2752,28 @@ function renderPortfolioHTML(as) {
         }); 
     }
 
-    function logHistory(type, s, a, p, desc='', curr = null) { 
-        let d = new Date(); 
-        let transactionCurrency = curr ? curr : appSettings.currency;
-        let t = { date: d.toLocaleDateString('tr-TR'), time: d.toLocaleTimeString('tr-TR').substring(0,5), type: type, sym: s, qty: a, price: p, total: a*p, desc: desc, curr: transactionCurrency }; 
-        tradeHistory.push(t); localStorage.setItem('tm_full_trade_history', JSON.stringify(tradeHistory)); renderHistory(); 
-    }
+    function logHistory(type, s, a, p, desc='', curr = null, pnl = 0) { 
+    let d = new Date(); 
+    let transactionCurrency = curr ? curr : appSettings.currency;
+    
+    let t = { 
+        date: d.toLocaleDateString('tr-TR'), 
+        time: d.toLocaleTimeString('tr-TR').substring(0,5), 
+        type: type, 
+        sym: s, 
+        qty: a, 
+        price: p, 
+        total: a*p, 
+        desc: desc, 
+        curr: transactionCurrency,
+        pnl: pnl // ÖNEMLİ: Kâr/Zarar buraya kaydediliyor
+    }; 
+    
+    tradeHistory.push(t); 
+    localStorage.setItem('tm_full_trade_history', JSON.stringify(tradeHistory)); 
+    renderHistory(); 
+}
+
     
     // --- NAKİT İŞLEMLERİ ---
     function modifyCash(m) { openCashModal(); }
@@ -1858,7 +2826,10 @@ function renderPortfolioHTML(as) {
         let topListHTML = ""; if(sortedAssets.length === 0) topListHTML = "<div style='text-align:center; font-size:11px; color:var(--text-sub); padding:10px;'>Veri Yok</div>";
         sortedAssets.forEach((a, i) => { let currentP = a.curr || a.buy; let rawPnL = (currentP - a.buy) * a.amt; let pnlColor = rawPnL >= 0 ? 'var(--success)' : 'var(--danger)'; topListHTML += `<div class="top-performer-row"><div class="tp-name"><div class="rank-badge ${i===0 ? 'rank-1' : ''}">${i+1}</div>${a.name.replace('.IS','')}</div><div class="tp-val" style="color:${pnlColor}">${rawPnL >= 0 ? '+' : ''}${rawPnL.toFixed(0)}</div></div>`; });
         document.getElementById('topPerformersList').innerHTML = topListHTML; renderNewAllocationChart(as);
-    }
+        
+    calculateTraderScore();
+}
+
     
     let wrChartInstance = null; function renderWinRateChart(rate) { const ctx = document.getElementById('winRateChart').getContext('2d'); if(wrChartInstance) wrChartInstance.destroy(); let color = rate >= 50 ? '#10b981' : '#ef4444'; wrChartInstance = new Chart(ctx, { type: 'doughnut', data: { labels: ['Win', 'Loss'], datasets: [{ data: [rate, 100 - rate], backgroundColor: [color, 'rgba(255,255,255,0.05)'], borderWidth: 0, cutout: '85%', borderRadius: 20 }] }, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false }, tooltip: { enabled: false } } } }); }
     let growthChartReal = null; function renderRealGrowthChart() { const ctx = document.getElementById('realGrowthChart').getContext('2d'); if(growthChartReal) growthChartReal.destroy(); let history = JSON.parse(localStorage.getItem('tm_networth_history')) || []; if(history.length === 0) history.push({ date: new Date().toLocaleDateString('tr-TR'), val: 0 }); let labels = history.map(h => h.date.substring(0, 5)); let data = history.map(h => h.val); let gradient = ctx.createLinearGradient(0, 0, 0, 400); gradient.addColorStop(0, 'rgba(59, 130, 246, 0.5)'); gradient.addColorStop(1, 'rgba(59, 130, 246, 0.0)'); growthChartReal = new Chart(ctx, { type: 'line', data: { labels: labels, datasets: [{ label: 'Net Varlık', data: data, borderColor: '#3b82f6', backgroundColor: gradient, borderWidth: 2, pointBackgroundColor: '#1e1e1e', pointBorderColor: '#3b82f6', pointRadius: 4, fill: true, tension: 0.4 }] }, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { x: { grid: { display: false }, ticks: { color: '#64748b', font: {size: 10} } }, y: { grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { color: '#64748b', font: {size: 10} } } } } }); }
@@ -1938,7 +2909,7 @@ function debouncedPreview(val) {
         }
     }
     
- /* --- GÜNCELLENMİŞ PORTFÖYE EKLEME (SEMBOL ZORLAMA) --- */
+ /* --- GÜNCELLENMİŞ PORTFÖYE EKLEME (IŞIK HIZINDA) --- */
 async function addToPortfolio(){ 
     // 1. Kullanıcının yazdığını al
     let rawInput = document.getElementById('addSymbol').value.trim();
@@ -1948,11 +2919,9 @@ async function addToPortfolio(){
     if(!rawInput || !a || !b) return addNotification('danger', 'Hata', 'Eksik bilgi girdiniz.'); 
 
     // 2. Fiyatı ve DOĞRU SEMBOLÜ tekrar çek
-    // (Kullanıcı "pepe" yazmış olabilir ama doğrusu "PEPE"dir)
     addNotification('info', 'İşleniyor', 'Varlık doğrulanıyor...');
     let checkRes = await getPrice(rawInput);
     
-    // Eğer CoinGecko'dan düzeltilmiş sembol geldiyse onu kullan, yoksa kullanıcının yazdığını büyüt
     let s = checkRes.correctedSymbol ? checkRes.correctedSymbol : rawInput.toUpperCase();
 
     let totalCostInEntry = a * b; 
@@ -1988,19 +2957,18 @@ async function addToPortfolio(){
         ex.buy = finalTotal / finalAmt; 
         ex.amt = finalAmt; 
         
-        // Logoyu da güncelle (Varsa)
         if(checkRes.image) ex.image = checkRes.image;
         if(checkRes.source) ex.source = checkRes.source;
 
     } else { 
         as.push({
-            name: s, // Düzeltilmiş isim (PEPE)
+            name: s, 
             amt: a, 
             buy: b, 
             curr: checkRes.price || b, 
             origin: assetOrigin,
-            image: checkRes.image || null, // Logo
-            source: checkRes.source || null // Kaynak
+            image: checkRes.image || null, 
+            source: checkRes.source || null 
         }); 
     } 
     
@@ -2016,7 +2984,11 @@ async function addToPortfolio(){
     document.getElementById('dcaPreview').style.display='none'; 
     document.getElementById('liveTradeTotal').innerText="0.00"; 
     
-    loadPF(true); 
+    // --- HIZ AYARI BURADA YAPILDI ---
+    // Eskiden: loadPF(true); -> Her şeyi yeniden indiriyordu.
+    // Şimdi: loadPF(false); -> Sadece listeyi çiziyor (İnterneti meşgul etmiyor).
+    loadPF(false); 
+    
     fetchNewsCustom(); 
     loadProfile(); 
 }
@@ -2038,57 +3010,63 @@ async function addToPortfolio(){
     
     // --- DÜZELTİLMİŞ SATIŞ ONAYI ---
     function confirmSell() { 
-        let i = document.getElementById('sellIdx').value; 
-        let amt = parseFloat(document.getElementById('sellAmt').value); 
-        let pr = parseFloat(document.getElementById('sellPrice').value); 
-        
-        if (!amt || !pr) return addNotification('warn', 'Eksik Bilgi', 'Miktar ve fiyat giriniz.'); 
-        
-        let as = JSON.parse(localStorage.getItem('myPF_final')); 
-        let ast = as[i]; 
-        if (amt > ast.amt) return addNotification('danger', 'Hata', 'Sahip olduğunuzdan fazlasını satamazsınız.'); 
+    let i = document.getElementById('sellIdx').value; 
+    let amt = parseFloat(document.getElementById('sellAmt').value); 
+    let pr = parseFloat(document.getElementById('sellPrice').value); 
+    
+    if (!amt || !pr) return addNotification('warn', 'Eksik Bilgi', 'Miktar ve fiyat giriniz.'); 
+    
+    let as = JSON.parse(localStorage.getItem('myPF_final')); 
+    let ast = as[i]; 
+    if (amt > ast.amt) return addNotification('danger', 'Hata', 'Sahip olduğunuzdan fazlasını satamazsınız.'); 
 
-        let transactionCurrency = exitCurrency; 
-        let totalSaleRaw = amt * pr;
-        let amountToAddWallet = 0;
-        
-        if(appSettings.currency === transactionCurrency) {
-            amountToAddWallet = totalSaleRaw;
-        } else {
-            if(appSettings.currency === 'TRY' && transactionCurrency === 'USD') amountToAddWallet = totalSaleRaw * usdTryRate;
-            else if (appSettings.currency === 'USD' && transactionCurrency === 'TRY') amountToAddWallet = totalSaleRaw / usdTryRate;
-        }
-
-        let buyCostInTransCurr = ast.buy;
-        if(ast.origin !== transactionCurrency) {
-            if(transactionCurrency === 'TRY') buyCostInTransCurr = ast.buy * usdTryRate; 
-            else buyCostInTransCurr = ast.buy / usdTryRate; 
-        }
-        
-        let profitInTransCurr = totalSaleRaw - (amt * buyCostInTransCurr);
-        let profitToWallet = 0;
-        if(appSettings.currency === transactionCurrency) profitToWallet = profitInTransCurr;
-        else if(appSettings.currency === 'TRY') profitToWallet = profitInTransCurr * usdTryRate;
-        else profitToWallet = profitInTransCurr / usdTryRate;
-
-        cashBalance += amountToAddWallet; 
-        realizedPnL += profitToWallet; 
-        
-        localStorage.setItem('tm_cash_balance', cashBalance); 
-        localStorage.setItem('tm_realized_pnl', realizedPnL); 
-        
-        logHistory('SATIM', ast.name, amt, pr, '', transactionCurrency); 
-        
-        ast.amt -= amt; 
-        if (ast.amt <= 0) as.splice(i, 1); 
-        localStorage.setItem('myPF_final', JSON.stringify(as)); 
-        
-        addNotification('success', 'Satış Başarılı', `Tutar Cüzdana İşlendi.`); 
-        document.getElementById('sellModal').style.display = 'none'; 
-        loadPF(true); 
-        renderHistory(); 
-        loadProfile(); 
+    let transactionCurrency = exitCurrency; 
+    let totalSaleRaw = amt * pr;
+    
+    // Alış Maliyetini Hesapla (Döviz dönüşümü yaparak)
+    let buyCostInTransCurr = ast.buy;
+    if(ast.origin !== transactionCurrency) {
+        if(transactionCurrency === 'TRY') buyCostInTransCurr = ast.buy * usdTryRate; 
+        else buyCostInTransCurr = ast.buy / usdTryRate; 
     }
+    
+    // BU İŞLEMDEN ELDE EDİLEN NET KÂR/ZARAR
+    let tradePnL = totalSaleRaw - (amt * buyCostInTransCurr);
+
+    // Kasaya Eklenecek Tutar (Dönüşümlü)
+    let amountToAddWallet = 0;
+    if(appSettings.currency === transactionCurrency) amountToAddWallet = totalSaleRaw;
+    else {
+        if(appSettings.currency === 'TRY' && transactionCurrency === 'USD') amountToAddWallet = totalSaleRaw * usdTryRate;
+        else if (appSettings.currency === 'USD' && transactionCurrency === 'TRY') amountToAddWallet = totalSaleRaw / usdTryRate;
+    }
+    
+    // Realized PnL Globaline Ekle (Dönüşümlü)
+    let profitToWallet = 0;
+    if(appSettings.currency === transactionCurrency) profitToWallet = tradePnL;
+    else if(appSettings.currency === 'TRY') profitToWallet = tradePnL * usdTryRate;
+    else profitToWallet = tradePnL / usdTryRate;
+
+    cashBalance += amountToAddWallet; 
+    realizedPnL += profitToWallet; 
+    
+    localStorage.setItem('tm_cash_balance', cashBalance); 
+    localStorage.setItem('tm_realized_pnl', realizedPnL); 
+    
+    // GEÇMİŞE KAYDET (PnL İLE BERABER) - Burası Kritik
+    logHistory('SATIM', ast.name, amt, pr, '', transactionCurrency, tradePnL); 
+    
+    ast.amt -= amt; 
+    if (ast.amt <= 0) as.splice(i, 1); 
+    localStorage.setItem('myPF_final', JSON.stringify(as)); 
+    
+    addNotification('success', 'Satış Başarılı', `Tutar Cüzdana İşlendi.`); 
+    document.getElementById('sellModal').style.display = 'none'; 
+    loadPF(true); 
+    renderHistory(); 
+    loadProfile(); 
+}
+
 
     function openSimulator(idx) { currentSimAssetIndex = idx; let as = JSON.parse(localStorage.getItem('myPF_final')) || []; let asset = as[idx]; if(!asset) return; document.getElementById('simAssetTitle').innerText = `${asset.name} Simülatörü`; let currentPrice = asset.curr || asset.buy; document.getElementById('simTargetPrice').value = currentPrice.toFixed(2); document.getElementById('simAddPrice').value = currentPrice.toFixed(2); document.getElementById('simRealizePrice').value = currentPrice.toFixed(2); document.querySelectorAll('.sim-result-box').forEach(x => x.style.display = 'none'); document.getElementById('simPercent').value = ""; document.getElementById('simAddAmt').value = ""; document.getElementById('simSellAmt').value = ""; switchSimTab('scenario', document.querySelectorAll('.sim-tab')[0]); document.getElementById('simModal').style.display = 'flex'; }
     function switchSimTab(tabName, btn) { document.querySelectorAll('.sim-content-pane').forEach(p => p.classList.remove('active')); document.getElementById('sim-pane-' + tabName).classList.add('active'); document.querySelectorAll('.sim-tab').forEach(t => t.classList.remove('active')); btn.classList.add('active'); }
@@ -2098,100 +3076,212 @@ async function addToPortfolio(){
     function calcSimAvg() { let newAmt = parseFloat(document.getElementById('simAddAmt').value); let newPrice = parseFloat(document.getElementById('simAddPrice').value); if(!newAmt || !newPrice) return; let as = JSON.parse(localStorage.getItem('myPF_final')); let asset = as[currentSimAssetIndex]; let oldTotal = asset.amt * asset.buy; let newTotal = newAmt * newPrice; let finalAmt = asset.amt + newAmt; let finalAvg = (oldTotal + newTotal) / finalAmt; let sym = asset.origin === 'USD' ? '$' : '₺'; document.getElementById('resOldAvg').innerText = sym + asset.buy.toFixed(2); document.getElementById('resNewAvg').innerText = sym + finalAvg.toFixed(2); document.getElementById('resTotalCost').innerText = sym + (oldTotal + newTotal).toLocaleString(undefined, {minimumFractionDigits:2}); let box = document.getElementById('simResAvg'); box.style.display = 'block'; box.className = 'sim-result-box'; }
     function calcSimRealize() { let sellAmt = parseFloat(document.getElementById('simSellAmt').value); let sellPrice = parseFloat(document.getElementById('simRealizePrice').value); if(!sellAmt || !sellPrice) return; let as = JSON.parse(localStorage.getItem('myPF_final')); let asset = as[currentSimAssetIndex]; if(sellAmt > asset.amt) { alert("Fazla miktar!"); return; } let cashIn = sellAmt * sellPrice; let profit = (sellPrice - asset.buy) * sellAmt; let remaining = asset.amt - sellAmt; let sym = asset.origin === 'USD' ? '$' : '₺'; document.getElementById('resCashIn').innerText = sym + cashIn.toLocaleString(undefined, {minimumFractionDigits:2}); let pnlEl = document.getElementById('resRealizedPnL'); pnlEl.innerText = (profit >= 0 ? '+' : '') + sym + profit.toLocaleString(undefined, {minimumFractionDigits:2}); pnlEl.className = profit >= 0 ? 'val-up' : 'val-down'; document.getElementById('resLeftAmt').innerText = remaining + " Adet"; let box = document.getElementById('simResRealize'); box.style.display = 'block'; box.className = 'sim-result-box ' + (profit >= 0 ? 'profit' : 'loss'); }
     
-    function fetchNewsCustom(isFallback = false){ let queryUrl = ""; let assetKeywords = []; let statusText = document.getElementById('newsStatusText'); let as = JSON.parse(localStorage.getItem('myPF_final')) || []; const f = document.getElementById('newsFeed'); if(!isFallback && f.innerHTML.includes('news-card-pro')) return; if (as.length > 0) { assetKeywords = as.map(a => { return a.name.toUpperCase().replace('BINANCE:', '').replace('BIST:', '').replace('FX:', '').replace('TVC:', '').replace('USDT', '').replace('.IS', ''); }); } if (isFallback) { queryUrl = `https://news.google.com/rss/topics/CAAqJggBCiCPASowCAUiKC9tLzA5czFmK0J1c2luZXNzL0J1c2luZXNzL0ZpbmFuY2UvZWNvbm9teQ?hl=tr&gl=TR&ceid=TR%3Atr`; statusText.innerText = "Genel Piyasa (Canlı)"; statusText.style.color = "var(--text-sub)"; } else { if (as.length > 0) { let topAsset = as.sort((a,b) => (b.amt*b.curr) - (a.amt*a.curr))[0]; let topSym = topAsset.name.toUpperCase().replace('BINANCE:', '').replace('BIST:', '').replace('USDT', '').replace('.IS', ''); queryUrl = `https://news.google.com/rss/search?q=${topSym}&hl=tr&gl=TR&ceid=TR%3Atr`; statusText.innerText = `Odak: ${topSym}`; statusText.style.color = "var(--success)"; } else { fetchNewsCustom(true); return; } } let userQuery = document.getElementById('newsSearch').value.trim(); if(userQuery) { queryUrl = `https://news.google.com/rss/search?q=${userQuery}&hl=tr&gl=TR&ceid=TR%3Atr`; statusText.innerText = `Arama: ${userQuery}`; } const l = document.getElementById('newsLoader'); if(!isFallback) { f.innerHTML=""; l.style.display="block"; } fetch(`https://api.rss2json.com/v1/api.json?rss_url=${encodeURIComponent(queryUrl)}`).then(r=>r.json()).then(d=>{ l.style.display="none"; if((!d.items || d.items.length === 0) && !isFallback && !userQuery) { fetchNewsCustom(true); return; } if(d.items && d.items.length > 0){ let h=""; d.items.slice(0,25).forEach(i=>{ let src = i.author || "Haber"; let tUp = i.title.toUpperCase(); let matchedTags = []; if(assetKeywords.length > 0) { assetKeywords.forEach(kw => { if(tUp.includes(kw) && !matchedTags.includes(kw)) matchedTags.push(kw); }); } let catTag = "FİNANS"; let catClass = "finans"; if(tUp.includes("BITCOIN") || tUp.includes("KRİPTO")) { catTag = "KRİPTO"; catClass = "kripto"; } else if(tUp.includes("BORSA") || tUp.includes("HİSSE")) { catTag = "BORSA"; catClass = "borsa"; } let tagsHtml = `<span class="nc-tag ${catClass}">${catTag}</span>`; matchedTags.forEach(tag => { tagsHtml += `<span class="nc-tag nc-asset-tag"><i class="fas fa-tag"></i> ${tag}</span>`; }); h+=`<div class="news-card-pro" style="border-left-color:${catClass==='kripto'?'#f59e0b':(catClass==='borsa'?'#3b82f6':'#10b981')}"><div class="nc-header"><div class="nc-tags-row">${tagsHtml}</div></div><div class="nc-title">${i.title}</div><div class="nc-footer"><div class="nc-source"><i class="fas fa-newspaper"></i> ${src}</div><a href="${i.link}" target="_blank" class="nc-read-btn">Oku <i class="fas fa-chevron-right"></i></a></div></div>`; }); f.innerHTML=h; } else { f.innerHTML=`<div style='padding:20px;text-align:center;color:var(--text-sub)'>Haber bulunamadı.<br><button onclick="fetchNewsCustom(true)" class="btn-main btn-sec" style="margin-top:10px; width:auto; display:inline-block;">Genel Akışı Yükle</button></div>`;} }).catch((e)=>{ l.style.display="none"; if(!isFallback && !userQuery) fetchNewsCustom(true); else f.innerHTML=`<div style='padding:20px;text-align:center;color:var(--text-sub)'>Bağlantı Hatası.<br><button onclick="fetchNewsCustom(true)" class="btn-main btn-sec" style="margin-top:10px; width:auto; display:inline-block;">Tekrar Dene</button></div>`; }); }
-    
-    function toggleTradeMenu() { const content = document.getElementById('tradeContent'); const chevron = document.getElementById('tradeChevron'); const card = document.getElementById('tradeCard'); if (content.classList.contains('collapsed')) { content.classList.remove('collapsed'); chevron.classList.add('rotated'); card.classList.add('open'); } else { content.classList.add('collapsed'); chevron.classList.remove('rotated'); card.classList.remove('open'); } }
-    function toggleAssetDetails(id) { const content = document.getElementById('asset-content-' + id); const chevron = document.getElementById('asset-chevron-' + id); if (content.classList.contains('collapsed')) { content.classList.remove('collapsed'); chevron.classList.add('rotated'); } else { content.classList.add('collapsed'); chevron.classList.remove('rotated'); } }
-        /* --- YENİ (SERVICE WORKER DESTEKLİ) BİLDİRİM SİSTEMİ --- */
+    /* --- YENİ GELİŞMİŞ HABER MOTORU --- */
+let newsInterval;
+let newsCountdown = 60;
+let isNewsPaused = false;
+let currentNewsQuery = "Ekonomi";
 
-// 1. Service Worker'ı (Sanal Arka Plan Çalışanı) Hazırlayalım
-if ('serviceWorker' in navigator) {
-    // Harici dosya olmadan, tek dosya içinde sanal worker oluşturuyoruz
-    const swCode = `
-        self.addEventListener('notificationclick', function(event) {
-            event.notification.close();
-            // Bildirime tıklanınca uygulamayı aç/odakla
-            event.waitUntil(
-                clients.matchAll({type: 'window'}).then( windowClients => {
-                    for (var i = 0; i < windowClients.length; i++) {
-                        var client = windowClients[i];
-                        if (client.url === '/' && 'focus' in client) {
-                            return client.focus();
-                        }
-                    }
-                    if (clients.openWindow) {
-                        return clients.openWindow('/');
-                    }
-                })
-            );
-        });
-    `;
-    const blob = new Blob([swCode], {type: 'text/javascript'});
-    const swUrl = URL.createObjectURL(blob);
-    navigator.serviceWorker.register(swUrl).then(reg => {
-        console.log("Bildirim servisi hazır.");
-    });
+function initNewsSystem() {
+    loadNews(currentNewsQuery);
+    startNewsTimer();
 }
 
-// 2. Yeni Bildirim Fonksiyonu
-function addNotification(type, title, msg) {
-    // A. Uygulama İçi Kayıt (Listeye Ekleme)
-    let n = { type: type, title: title, msg: msg, time: new Date().toLocaleTimeString(), read: false };
-    notifications.unshift(n);
-    if(notifications.length > 50) notifications.pop();
-    localStorage.setItem('tm_notifications', JSON.stringify(notifications));
-    updateBadge();
-    
-    // Eğer bildirim sayfasındaysak listeyi yenile
-    if(document.getElementById('page-notifications') && document.getElementById('page-notifications').classList.contains('active')) {
-        renderNotifications();
+function startNewsTimer() {
+    clearInterval(newsInterval);
+    newsCountdown = 60;
+    updateTimerUI();
+    newsInterval = setInterval(() => {
+        if (isNewsPaused) return;
+        newsCountdown--;
+        updateTimerUI();
+        if (newsCountdown <= 0) {
+            loadNews(currentNewsQuery, true);
+            newsCountdown = 60;
+        }
+    }, 1000);
+}
+
+function updateTimerUI() {
+    const bar = document.getElementById('refreshBar');
+    const txt = document.getElementById('refreshTimer');
+    if (bar) bar.style.width = (newsCountdown / 60 * 100) + "%";
+    if (txt) txt.innerText = newsCountdown + "s";
+}
+
+function toggleAutoRefresh(btn) {
+    isNewsPaused = !isNewsPaused;
+    const icon = document.getElementById('refreshIcon');
+    const badge = document.getElementById('newsStatusBadge');
+    if (isNewsPaused) {
+        icon.classList.remove('fa-spin');
+        btn.style.opacity = "0.5";
+        badge.style.background = "var(--text-sub)";
+        document.getElementById('newsStatusLabel').innerText = "DURAKLATILDI";
+    } else {
+        icon.classList.add('fa-spin');
+        btn.style.opacity = "1";
+        badge.style.background = "var(--success)";
+        document.getElementById('newsStatusLabel').innerText = "CANLI YAYIN";
     }
+}
 
-    // B. Ayar Kontrolü (Ayarlar kapalıysa ses/titreşim yapma)
-    let category = 'trade';
-    if(title.includes('Alarm') || title.includes('HEDEF') || title.includes('DİKKAT')) category = 'price';
-    else if(title.includes('Haber')) category = 'news';
+function filterNews(topic, btn) {
+    document.querySelectorAll('.nf-chip').forEach(c => c.classList.remove('active'));
+    btn.classList.add('active');
+    document.getElementById('newsSearchInput').value = "";
+    if (topic === 'GENEL') currentNewsQuery = "Ekonomi Finans";
+    else if (topic === 'KRİPTO') currentNewsQuery = "Bitcoin Kripto Blockchain";
+    else if (topic === 'BORSA') currentNewsQuery = "Borsa İstanbul Bist Hisse";
+    else if (topic === 'EMTİA') currentNewsQuery = "Altın Dolar Euro Petrol";
+    else currentNewsQuery = topic;
+    newsCountdown = 60; 
+    loadNews(currentNewsQuery);
+}
+
+function runNewsSearch() {
+    const val = document.getElementById('newsSearchInput').value.trim();
+    if (val.length < 2) return addNotification('warn', 'Arama', 'Lütfen en az 2 karakter girin.');
+    document.querySelectorAll('.nf-chip').forEach(c => c.classList.remove('active'));
+    currentNewsQuery = val;
+    loadNews(val);
+    document.getElementById('newsSearchInput').blur();
+}
+
+/* --- GÖRSELLİ YENİ LOADNEWS FONKSİYONU --- */
+async function loadNews(query, silent = false) {
+    const container = document.getElementById('newsTimeline');
+    if (!container) return;
     
-    if(notifySettings && !notifySettings[category]) return;
-
-    // C. SES VE TİTREŞİM
-    if(notifySettings && notifySettings.sound) playNotificationSound(type);
-    if(notifySettings && notifySettings.vibrate && navigator.vibrate) {
-        if(type === 'danger') navigator.vibrate([100, 50, 100, 50, 100]);
-        else navigator.vibrate(200);
+    if (!silent) {
+        container.innerHTML = `<div style="text-align:center; padding:50px; color:var(--text-sub);"><i class="fas fa-satellite-dish fa-spin" style="font-size:24px; margin-bottom:10px;"></i><br>Haberler Taranıyor...</div>`;
     }
+    
+    const rssUrl = `https://news.google.com/rss/search?q=${encodeURIComponent(query)}&hl=tr&gl=TR&ceid=TR:tr`;
+    // api.rss2json.com servisi thumbnail (görsel) desteği sunar
+    const apiUrl = `https://api.rss2json.com/v1/api.json?rss_url=${encodeURIComponent(rssUrl)}`;
+    
+    try {
+        const res = await fetch(apiUrl);
+        const data = await res.json();
+        
+        if (data.status === 'ok' && data.items.length > 0) {
+            let html = "";
+            data.items.slice(0, 20).forEach((item, index) => {
+                const date = new Date(item.pubDate);
+                const timeStr = date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+                
+                let titleParts = item.title.split(' - ');
+                let source = titleParts.pop();
+                let cleanTitle = titleParts.join(' - ');
+                
+                let badgeClass = "";
+                let sonDakikaLabel = "";
+                
+                if (index === 0) {
+                    badgeClass = "hot"; 
+                    sonDakikaLabel = '<span style="color:var(--danger); background:rgba(239,68,68,0.15); padding:2px 6px; border-radius:4px; margin-left:8px; font-size:9px;">SON DAKİKA</span>';
+                } else if (index < 5) {
+                    badgeClass = "new"; 
+                }
 
-    // D. BİLDİRİM ÇUBUĞU (SERVICE WORKER İLE ZORLAMA)
-    if ("Notification" in window && Notification.permission === "granted") {
-        let iconUrl = "https://cdn-icons-png.flaticon.com/512/3429/3429170.png";
-        if(type === 'danger') iconUrl = "https://cdn-icons-png.flaticon.com/512/190/190406.png";
+                const safeLink = item.link.replace(/'/g, "\\'");
+                
+                // --- GÖRSEL MANTIĞI ---
+                let imageHtml = '';
+                // Eğer thumbnail varsa ve Google'ın kendi logosu değilse
+                if (item.thumbnail && !item.thumbnail.includes('google_news')) {
+                    // Görseli yüklemeyi dene, hata verirse (onerror) placeholder ikonunu göster
+                    imageHtml = `<img src="${item.thumbnail}" alt="Haber" onerror="this.style.display='none'; this.parentNode.innerHTML='<i class=\\'fas fa-newspaper nim-placeholder-icon\\'></i>'">`;
+                } else {
+                    // Görsel yoksa direkt placeholder ikonu göster
+                    imageHtml = `<i class="fas fa-newspaper nim-placeholder-icon"></i>`;
+                }
+                // ----------------------
 
-        // Yöntem A: Service Worker varsa onu kullan (Daha garantidir)
-        if (navigator.serviceWorker.controller) {
-            navigator.serviceWorker.ready.then(function(registration) {
-                registration.showNotification(title, {
-                    body: msg,
-                    icon: iconUrl,
-                    badge: iconUrl, 
-                    vibrate: (notifySettings && notifySettings.vibrate) ? [200, 100, 200] : [],
-                    tag: 'tm-notification', 
-                    renotify: true 
-                });
+                html += `
+                <div class="news-item-modern ${badgeClass}">
+                    <div class="nim-time">
+                        <i class="far fa-clock"></i> ${timeStr} ${sonDakikaLabel}
+                    </div>
+                    
+                    <div class="nim-card" onclick="openNewsRedirect('${safeLink}')">
+                        
+                        <div class="nim-img-box">
+                            ${imageHtml}
+                        </div>
+
+                        <div class="nim-content">
+                            <div class="nim-title">${cleanTitle}</div>
+                            <div class="nim-source">
+                                <i class="fas fa-newspaper" style="margin-right:4px;"></i> ${source}
+                            </div>
+                        </div>
+
+                    </div>
+                </div>`;
             });
+            container.innerHTML = html;
         } else {
-            // Yöntem B: Service Worker yoksa eski yöntem (Yedek)
+            container.innerHTML = `<div style="text-align:center; padding:30px; color:var(--text-sub);">Sonuç bulunamadı.</div>`;
+        }
+    } catch (e) {
+        console.error("Haber hatası:", e);
+        if (!silent) container.innerHTML = `<div style="text-align:center; color:var(--danger); padding:20px;">Bağlantı hatası.</div>`;
+    }
+}
+
+
+    function toggleTradeMenu() { const content = document.getElementById('tradeContent'); const chevron = document.getElementById('tradeChevron'); const card = document.getElementById('tradeCard'); if (content.classList.contains('collapsed')) { content.classList.remove('collapsed'); chevron.classList.add('rotated'); card.classList.add('open'); } else { content.classList.add('collapsed'); chevron.classList.remove('rotated'); card.classList.remove('open'); } }
+    function toggleAssetDetails(id) { const content = document.getElementById('asset-content-' + id); const chevron = document.getElementById('asset-chevron-' + id); if (content.classList.contains('collapsed')) { content.classList.remove('collapsed'); chevron.classList.add('rotated'); } else { content.classList.add('collapsed'); chevron.classList.remove('rotated'); } }
+        /* --- YENİ GELİŞMİŞ BİLDİRİM SİSTEMİ (C KISMI) --- */
+    function addNotification(type, title, msg) {
+        // 1. Uygulama İçi Kayıt (Eski Yöntem)
+        let n = { type: type, title: title, msg: msg, time: new Date().toLocaleTimeString(), read: false };
+        notifications.unshift(n);
+        if(notifications.length > 50) notifications.pop();
+        localStorage.setItem('tm_notifications', JSON.stringify(notifications));
+        updateBadge();
+        if(document.getElementById('page-notifications') && document.getElementById('page-notifications').classList.contains('active')) renderNotifications();
+
+        // 2. Kategori Tespiti
+        let category = 'trade'; // Varsayılan
+        if(title.includes('Alarm') || title.includes('HEDEF') || title.includes('DİKKAT')) category = 'price';
+        else if(title.includes('Haber')) category = 'news';
+        
+        // 3. Ayar Kontrolü: Kullanıcı bu kategoriyi kapatmış mı?
+        // (Eğer ayar yoksa varsayılan olarak göster)
+        if(notifySettings && !notifySettings[category]) return;
+
+        // 4. SES VE TİTREŞİM
+        if(notifySettings && notifySettings.sound) playNotificationSound(type);
+        if(notifySettings && notifySettings.vibrate && navigator.vibrate) {
+            if(type === 'danger') navigator.vibrate([100, 50, 100, 50, 100]); // 3 kere titret (Hata)
+            else navigator.vibrate(200); // Tek titret (Normal)
+        }
+
+        // 5. BROWSER / TELEFON BİLDİRİMİ (PUSH)
+        if ("Notification" in window && Notification.permission === "granted") {
+            // Mobilde ikonun düzgün görünmesi için app iconu
+            let iconUrl = "https://cdn-icons-png.flaticon.com/512/3429/3429170.png"; 
+            if(type === 'danger') iconUrl = "https://cdn-icons-png.flaticon.com/512/190/190406.png"; 
+
             const notif = new Notification(title, {
                 body: msg,
                 icon: iconUrl,
                 vibrate: (notifySettings && notifySettings.vibrate) ? [200, 100, 200] : []
             });
-             notif.onclick = function() {
+
+            // Bildirime tıklayınca uygulamaya odaklan
+            notif.onclick = function() {
                 window.focus();
                 notif.close();
+                // Bildirim sayfasına yönlendir (index 3 genelde bildirim sayfasıdır)
+                let notifBtn = document.querySelectorAll('.nav-item')[3]; 
+                if(notifBtn) switchPage('notifications', notifBtn);
             };
         }
     }
-}
 
     function renderNotifications(){ let l = document.getElementById('notificationList'); l.innerHTML = ""; if(notifications.length === 0){ l.innerHTML = "<div style='text-align:center; padding:30px; color:var(--text-sub); opacity:0.6;'><i class='fas fa-bell-slash' style='font-size:24px; margin-bottom:10px;'></i><br>Bildirim Yok</div>"; return; } notifications.forEach(n => { let icon = 'info-circle'; let cls = 'n-info'; if(n.type === 'success') { icon = 'check-circle'; cls = 'n-success'; } if(n.type === 'danger') { icon = 'exclamation-circle'; cls = 'n-danger'; } if(n.type === 'warn') { icon = 'bell'; cls = 'n-warn'; } l.innerHTML += `<div class="notif-card ${cls} ${n.read ? '' : 'unread'}"><div class="notif-icon-box"><i class="fas fa-${icon}"></i></div><div class="notif-content"><div class="notif-title">${n.title}</div><div class="notif-msg">${n.msg}</div></div><div class="notif-time">${n.time}</div></div>`; }); notifications.forEach(n => n.read = true); localStorage.setItem('tm_notifications', JSON.stringify(notifications)); updateBadge(); }
     function updateBadge(){ let unread = notifications.filter(n => !n.read).length; let b = document.getElementById('notifBadge'); if(unread > 0){ b.innerText = unread; b.classList.add('active'); } else { b.classList.remove('active'); } }
@@ -2204,12 +3294,66 @@ function addNotification(type, title, msg) {
     function setEntryCurrency(curr) { entryCurrency = curr; let btn = document.getElementById('currencyToggle'); if(btn) { if(curr === 'TRY') { btn.innerText = '₺'; btn.className = 'currency-toggle-btn active-try'; } else { btn.innerText = '$'; btn.className = 'currency-toggle-btn active-usd'; } } calcDca(); calcLiveTotal(); }
     function toggleEntryCurrency() { entryCurrency === 'TRY' ? setEntryCurrency('USD') : setEntryCurrency('TRY'); }
     
-    const marketPresets = { 'kripto': ['BTC', 'ETH', 'SOL', 'AVAX', 'XRP', 'DOGE', 'PEPE', 'SHIB', 'BNB', 'ADA'], 'hisse': ['THYAO.IS', 'ASELS.IS', 'GARAN.IS', 'AKBNK.IS', 'EREGL.IS', 'SASA.IS', 'KCHOL.IS', 'TUPRS.IS', 'SISE.IS', 'BIMAS.IS'], 'altin': ['GC=F', 'SI=F', 'CL=F', 'HG=F', 'NG=F'], 'doviz': ['TRY=X', 'EURTRY=X', 'EUR=X', 'GBPTRY=X', 'JPY=X'] };
-    const displayNames = { 'GC=F': 'ONS ALTIN', 'SI=F': 'GÜMÜŞ', 'CL=F': 'HAM PETROL', 'HG=F': 'BAKIR', 'NG=F': 'DOĞALGAZ', 'TRY=X': 'USD/TRY', 'EURTRY=X': 'EUR/TRY', 'EUR=X': 'EUR/USD', 'GBPTRY=X': 'GBP/TRY', 'JPY=X': 'USD/JPY' };
+        /* --- 1. KISIM: GÜNCELLENMİŞ MARKET PRESETS --- */
+    const marketPresets = { 
+        'kripto': ['BTC', 'ETH', 'SOL', 'AVAX', 'XRP', 'DOGE', 'PEPE', 'SHIB', 'BNB', 'ADA'], 
+        'hisse': ['THYAO.IS', 'ASELS.IS', 'GARAN.IS', 'AKBNK.IS', 'EREGL.IS', 'SASA.IS', 'KCHOL.IS', 'TUPRS.IS', 'SISE.IS', 'BIMAS.IS'], 
+        // Yeni Hızlı Motorlar bu anahtarlara ihtiyaç duymadan otomatik liste getirecek, 
+        // ancak tanımların burada temiz kalması iyidir.
+        'altin': ['ONS', 'GRAM', 'GUMUS'], 
+        'doviz': ['USDTRY', 'EURTRY', 'EURUSD', 'GBPTRY'] 
+    };
+
     async function loadMarketTab(category, btn) { currentMarketTab = category; if(btn) { document.querySelectorAll('.m-tab-pro').forEach(b => b.classList.remove('active')); btn.classList.add('active'); } currentRenderId++; const myRenderId = currentRenderId; const container = document.getElementById('marketLiveList'); if(!container) return; container.innerHTML = '<div class="skeleton"></div><div class="skeleton"></div><div class="skeleton"></div>'; let list = marketPresets[category] || []; if(list.length > 0) { let firstRaw = list[0]; let firstTv = ""; if(category==='kripto') firstTv = "BINANCE:" + firstRaw + "USDT"; else if(category==='hisse') firstTv = "BIST:" + firstRaw.replace('.IS',''); else if(category==='altin') firstTv = "TVC:GOLD"; else if(category==='doviz') firstTv = "FX:USDTRY"; renderTradingView(firstTv); selectedMarketSymbol = firstTv; } const promises = list.map(async (sym) => { let dName = sym; if(category === 'hisse') dName = sym.replace('.IS',''); else if(displayNames[sym]) dName = displayNames[sym]; let data = await getPrice(sym); if(currentRenderId !== myRenderId) return ""; let priceTxt = "--"; let changeTxt = "--"; let changeClass = "val-neutral"; if(data.price > 0) { let s = data.origin === 'USD' ? '$' : '₺'; priceTxt = s + data.price.toLocaleString(undefined, {minimumFractionDigits:2, maximumFractionDigits:2}); changeTxt = "%" + data.change.toFixed(2); changeClass = data.change >= 0 ? "val-up" : "val-down"; } let logo = getAssetLogoHtml(dName); let tvSym = sym; if(category==='kripto') tvSym = "BINANCE:" + sym + "USDT"; else if(category==='hisse') tvSym = "BIST:" + sym.replace('.IS',''); else if(category==='altin' && sym==='GC=F') tvSym = "TVC:GOLD"; else if(category==='doviz' && sym==='TRY=X') tvSym = "FX:USDTRY"; else if(category==='doviz' && sym==='EURTRY=X') tvSym = "FX:EURTRY"; let activeClass = (selectedMarketSymbol === tvSym) ? 'active' : ''; return `<div class="market-row-item ${activeClass}" onclick="selectMarketItem('${tvSym}', this)"><div class="m-row-left">${logo}<div class="m-row-info"><span class="m-row-sym">${dName}</span><span class="m-row-name">${data.source || 'Piyasa'}</span></div></div><div class="m-row-right"><span class="m-row-price">${priceTxt}</span><span class="m-row-change ${changeClass}">${changeTxt}</span></div></div>`; }); const results = await Promise.all(promises); if(currentRenderId === myRenderId) { container.innerHTML = results.join(''); } }
     function selectMarketItem(tvSymbol, el) { selectedMarketSymbol = tvSymbol; if(el) { document.querySelectorAll('.market-row-item').forEach(x => x.classList.remove('active')); el.classList.add('active'); } renderTradingView(tvSymbol); }
     function searchInChart() { let val = document.getElementById('chartSearchInput').value.trim().toUpperCase(); if(!val) return; let cleanVal = val.replace('/', '').replace(' ', '').replace('-', ''); let finalSymbol = cleanVal; if(cleanVal.includes(':')) { renderTradingView(cleanVal); return; } if(currentMarketTab === 'kripto') { const quotes = ['USDT', 'TRY', 'BUSD', 'USDC', 'EUR', 'BTC', 'ETH']; const hasQuote = quotes.some(q => cleanVal.endsWith(q)); if(!hasQuote) finalSymbol = cleanVal + 'USDT'; finalSymbol = 'BINANCE:' + finalSymbol; } else if(currentMarketTab === 'hisse') finalSymbol = 'BIST:' + cleanVal; else if(currentMarketTab === 'doviz') finalSymbol = 'FX:' + cleanVal; else if(currentMarketTab === 'altin') { if(cleanVal === 'ALTIN' || cleanVal === 'ONS') finalSymbol = 'TVC:GOLD'; else if(cleanVal === 'GRAM' || cleanVal === 'GRAMALTIN') finalSymbol = 'FX:XAUTRY'; else finalSymbol = 'TVC:' + cleanVal; } renderTradingView(finalSymbol); }
-    function getAssetLogoHtml(symbol) { let s = symbol.toUpperCase().trim().replace('.IS',''); const manualLogos = { 'THYAO': 'https://upload.wikimedia.org/wikipedia/commons/thumb/b/b5/Turkish_Airlines_logo_2010.svg/2560px-Turkish_Airlines_logo_2010.svg.png', 'GARAN': 'https://upload.wikimedia.org/wikipedia/commons/2/22/Garanti_BBVA_logo.png', 'AKBNK': 'https://upload.wikimedia.org/wikipedia/commons/thumb/0/0d/Akbank_logo.svg/2560px-Akbank_logo.svg.png', 'ASELS': 'https://upload.wikimedia.org/wikipedia/tr/6/62/Aselsan_logo.png', 'EREGL': 'https://www.erdemir.com.tr/assets/images/logo.png', 'SASA': 'https://www.sasa.com.tr/img/logo-tr.png', 'KCHOL': 'https://upload.wikimedia.org/wikipedia/commons/thumb/1/1c/Ko%C3%A7_Holding_logo.svg/1200px-Ko%C3%A7_Holding_logo.svg.png', 'TUPRS': 'https://upload.wikimedia.org/wikipedia/commons/e/e4/T%C3%BCpra%C5%9F_logo.png', 'SISE': 'https://www.sisecam.com.tr/sites/catalogs/theme/img/sisecam-logo.svg', 'BIMAS': 'https://upload.wikimedia.org/wikipedia/commons/thumb/9/93/Bim_Logo.svg/1200px-Bim_Logo.svg.png', 'ONS ALTIN': 'https://assets.coincap.io/assets/icons/paxg@2x.png', 'USD/TRY': 'https://flagcdn.com/w40/us.png', 'EUR/TRY': 'https://flagcdn.com/w40/eu.png', 'EUR/USD': 'https://flagcdn.com/w40/eu.png', 'GBP/TRY': 'https://flagcdn.com/w40/gb.png', 'USD/JPY': 'https://flagcdn.com/w40/jp.png', 'GÜMÜŞ': 'https://assets.coincap.io/assets/icons/xag@2x.png', 'HAM PETROL': 'https://img.icons8.com/color/48/oil-industry.png', 'BAKIR': 'https://img.icons8.com/color/48/copper-ore.png', 'DOĞALGAZ': 'https://img.icons8.com/color/48/gas.png' }; if(manualLogos[s]) return `<div class="asset-logo-wrap" style="background:white;"><img src="${manualLogos[s]}" class="asset-logo-img" style="object-fit:contain; padding:2px;"></div>`; if(s.length <= 5 && !['HAM','BAK','DOG','ONS','USD','EUR','GBP'].includes(s.substring(0,3)) && !s.includes(' ')) { return `<div class="asset-logo-wrap"><img src="https://assets.coincap.io/assets/icons/${s.toLowerCase()}@2x.png" class="asset-logo-img" onerror="this.style.display='none';this.parentNode.innerHTML='<div class=\\'asset-avatar-text\\'>${s[0]}</div>'"></div>`; } let seed = 0; for (let i = 0; i < s.length; i++) seed += s.charCodeAt(i); const colors = ['#f87171', '#fbbf24', '#34d399', '#60a5fa', '#818cf8', '#f472b6', '#a78bfa', '#2dd4bf']; let color = colors[seed % colors.length]; return `<div class="asset-logo-wrap" style="border-color:${color}; background:rgba(255,255,255,0.05);"><span class="asset-avatar-text" style="color:${color}; letter-spacing:-1px;">${s.substring(0,2)}</span></div>`; }
+    /* --- GÜNCELLENMİŞ HİBRİT LOGO MOTORU (Kripto Resimli, Diğerleri Kutulu) --- */
+function getAssetLogoHtml(symbol) {
+    let s = symbol.toUpperCase().trim().replace('.IS','');
+    
+    // RENK SEÇİMİ (Kutucuklar için lazım)
+    let seed = 0;
+    for (let i = 0; i < s.length; i++) seed += s.charCodeAt(i);
+    const colors = ['#ef4444', '#f97316', '#f59e0b', '#84cc16', '#10b981', '#06b6d4', '#3b82f6', '#6366f1', '#8b5cf6', '#d946ef', '#f43f5e'];
+    let color = colors[seed % colors.length];
+
+    // KUTUCUK HTML'i (Hisseler ve Resmi Bulunamayanlar İçin Yedek)
+    const boxHtml = `
+        <div style="
+            width:40px; height:40px; 
+            background:${color}20; 
+            border:1px solid ${color}60; 
+            border-radius:12px; 
+            display:flex; align-items:center; justify-content:center; 
+            color:${color}; font-weight:900; font-size:12px; 
+            letter-spacing:-0.5px; box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        ">${s.substring(0,3)}</div>`;
+
+    // --- 1. KRİPTO KONTROLÜ ---
+    // Eğer USDT içeriyorsa veya bilinen coin listesindeyse veya uzun isimliyse (BABYDOGE gibi)
+    const isCrypto = s.includes('USDT') || 
+                     ['BTC','ETH','BNB','SOL','XRP','DOGE','ADA','AVAX','SHIB','PEPE','BABYDOGE','FLOKI','FET','ARB','APT'].includes(s) ||
+                     (s.length > 5 && !s.includes(' ')); // Genelde uzun semboller coindir
+
+    if (isCrypto) {
+        // Sembolü temizle (BTCUSDT -> btc)
+        let cleanSym = s.replace('USDT','').toLowerCase();
+        
+        // Resim çekmeye çalış (Hata verirse kutucuğa döner)
+        return `<div class="asset-logo-wrap" style="background:transparent; border:none; width:40px; margin-right:10px;">
+            <img src="https://assets.coincap.io/assets/icons/${cleanSym}@2x.png" 
+                 style="width:36px; height:36px; border-radius:50%; object-fit:contain;"
+                 
+onerror="this.outerHTML=\`<div style='width:40px;height:40px;background:${color}20;border:1px solid ${color}60;border-radius:12px;display:flex;align-items:center;justify-content:center;color:${color};font-weight:900;font-size:12px;'>${s.substring(0,3)}</div>\`">
+        </div>`;
+    }
+
+    // --- 2. HİSSE VE DÖVİZLER (Kutucuk Göster) ---
+    return `<div class="asset-logo-wrap" style="background:transparent; border:none; width:40px; margin-right:10px;">
+        ${boxHtml}
+    </div>`;
+}
+
     function checkPolyInit() { if(polyApiKey) { document.getElementById('polyIndicator').className='poly-status-dot'; testPolygonConnection(); } else { document.getElementById('polyIndicator').className='poly-status-dot idle'; document.getElementById('polyStatusText').innerText="KOD YOK"; } }
     function savePolyKey(val){ polyApiKey=val.trim(); localStorage.setItem('tm_poly_key',polyApiKey); if(polyApiKey==="") checkPolyInit(); else testPolygonConnection(); }
     async function testPolygonConnection() { if(!polyApiKey) return; const ind=document.getElementById('polyIndicator'); const txt=document.getElementById('polyStatusText'); txt.innerText="BAĞLANILIYOR..."; try{ const response=await fetch(`https://api.polygon.io/v2/aggs/ticker/AAPL/prevClose?adjusted=true&apiKey=${polyApiKey}`); if(!response.ok) throw new Error(response.status); const data=await response.json(); if(data.status==="OK" || data.resultsCount>=0){ ind.className='poly-status-dot active'; txt.innerText="AKTİF"; txt.style.color="var(--success)"; } } catch(e){ ind.className='poly-status-dot error'; txt.innerText="HATA"; txt.style.color="var(--danger)"; } }
@@ -2425,67 +3569,62 @@ function sortMarketData(type, btn) {
     processAndRenderData();
 }
 
-/* --- GÜNCELLENMİŞ VERİ MOTORU (COINGECKO DESTEKLİ) --- */
+/* --- MEVCUT fetchMarketData FONKSİYONUNU TAMAMEN BUNUNLA DEĞİŞTİRİN --- */
 async function fetchMarketData() {
     const loader = document.getElementById('marketLoader');
     if(loader) loader.classList.add('active');
     isMarketLoading = true;
 
     try {
+        // --- SENARYO 1: KRİPTO (Aynı kalıyor) ---
         if(currentCategory === 'kripto') {
-            // EĞER COINGECKO ANAHTARI VARSA
             if (coingeckoApiKey) {
-                // CoinGecko API Bağlantısı
                 const url = `https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&order=market_cap_desc&per_page=${itemsPerPage}&page=${currentPage}&sparkline=false&x_cg_demo_api_key=${coingeckoApiKey}`;
-                
                 const res = await fetch(url);
                 const data = await res.json();
                 
                 if(Array.isArray(data)) {
-                    // CoinGecko verisini formatla
                     const cgData = data.map(d => ({
                         symbol: d.symbol.toUpperCase(),
                         name: d.name,
                         price: d.current_price,
                         change: d.price_change_percentage_24h,
                         vol: d.total_volume,
-                        image: d.image, // Orijinal logo URL'si
+                        image: d.image,
                         source: 'RANK #' + d.market_cap_rank
                     }));
-                    
                     if(currentPage === 1) marketDataCache = cgData;
                     else marketDataCache = [...marketDataCache, ...cgData];
                 }
-            } else {
-                // YOKSA ESKİ YÖNTEM (BINANCE)
-                if(currentPage === 1) {
-                    const res = await fetch('https://api.binance.com/api/v3/ticker/24hr');
-                    const data = await res.json();
-                    marketDataCache = data.filter(d => d.symbol.endsWith('USDT'))
-                        .map(d => ({
-                            symbol: d.symbol.replace('USDT', ''),
-                            price: parseFloat(d.lastPrice),
-                            change: parseFloat(d.priceChangePercent),
-                            vol: parseFloat(d.quoteVolume),
-                            source: 'BINANCE'
-                        }));
-                    marketDataCache.sort((a,b) => b.vol - a.vol);
-                }
             }
-
-        } else if(currentCategory === 'hisse') {
+        } 
+        
+        // --- SENARYO 2: HİSSE (BIST) (Aynı kalıyor) ---
+        else if(currentCategory === 'hisse') {
             marketDataCache = bistExtended.map(sym => ({
-                symbol: sym, price: 0, change: 0, vol: 0, source: 'BIST'
+                symbol: sym, price: 0, change: 0, vol: 0, source: 'BIST', image: null
             }));
-            updateBistPrices();
-        } else {
-            let list = (currentCategory === 'altin') ? ['GC=F','SI=F','CL=F','HG=F'] : ['TRY=X','EURTRY=X','EUR=X','GBPTRY=X'];
-            marketDataCache = list.map(sym => ({
-                symbol: sym, price: 0, change: 0, vol: 0, source: currentCategory.toUpperCase()
-            }));
-            updateOtherPrices();
+            updateBistPrices(); // Arka planda fiyatları doldurur
+        } 
+        
+        // --- SENARYO 3: DÖVİZ (YENİ HIZLI MOTOR) ---
+        else if(currentCategory === 'doviz') {
+            // Sadece ilk sayfada çekiyoruz, pagination gerekmez
+            if(currentPage === 1) {
+                marketDataCache = await fetchFastForex();
+            }
+        } 
+        
+        // --- SENARYO 4: ALTIN (YENİ HIZLI MOTOR) ---
+        else if(currentCategory === 'altin') {
+            // Sadece ilk sayfada çekiyoruz
+            if(currentPage === 1) {
+                marketDataCache = await fetchFastGold();
+            }
         }
+
         processAndRenderData();
+
     } catch (error) {
         console.error("Veri hatası:", error);
         if(loader) loader.classList.remove('active');
@@ -2510,18 +3649,7 @@ async function updateBistPrices() {
     }
 }
 
-async function updateOtherPrices() {
-     // Altın/Döviz için benzer mantık, daha hızlı döngü
-     for(let item of marketDataCache) {
-        getPrice(item.symbol).then(res => {
-            if(res && res.price > 0) {
-                item.price = res.price;
-                item.change = res.change;
-                updateDomItem(item);
-            }
-        });
-    }
-}
+
 
 // 5. Veriyi İşle ve Ekrana Bas (Sıralama + Pagination)
 function processAndRenderData() {
@@ -2560,8 +3688,28 @@ function renderNextBatch() {
     let html = "";
     batch.forEach((item, idx) => {
         let globalIdx = start + idx + 1;
-        let pStr = item.price > 0 ? formatPrice(item.price, currentCategory) : "--";
-        
+                let pStr = "--";
+        if (item.price > 0) {
+            // A) ALTIN KATEGORİSİ
+            if (currentCategory === 'altin') {
+                // Sadece 'ONS' içerenler Dolar ($) olsun
+                if (item.symbol.includes('ONS')) {
+                     pStr = '$' + item.price.toLocaleString(undefined, {minimumFractionDigits:2, maximumFractionDigits:2});
+                } else {
+                     // Diğerleri (Gram, Çeyrek, Cumhuriyet) TL (₺) olsun
+                     pStr = '₺' + item.price.toLocaleString(undefined, {minimumFractionDigits:2, maximumFractionDigits:2});
+                }
+            } 
+            // B) KRİPTO -> HEP DOLAR
+            else if (currentCategory === 'kripto') {
+                pStr = '$' + item.price.toLocaleString(undefined, {minimumFractionDigits:2, maximumFractionDigits:2});
+            } 
+            // C) DİĞERLERİ (HİSSE, DÖVİZ) -> HEP TL
+            else {
+                pStr = '₺' + item.price.toLocaleString(undefined, {minimumFractionDigits:2, maximumFractionDigits:2});
+            }
+        }
+
         let isUp = item.change >= 0;
         let cClass = isUp ? 'bg-up' : 'bg-down';
         let cIcon = isUp ? '<i class="fas fa-caret-up"></i>' : '<i class="fas fa-caret-down"></i>';
@@ -2625,11 +3773,32 @@ document.getElementById('infiniteMarketList').addEventListener('scroll', functio
     }
 });
 
-// Yardımcı: Fiyat Formatı
+/* --- GÜNCELLENMİŞ FORMAT PRICE FONKSİYONU --- */
 function formatPrice(p, cat) {
-    if(cat === 'kripto' || cat === 'altin') return '$' + p.toLocaleString(undefined, {minimumFractionDigits:2, maximumFractionDigits:2});
+    // 1. Kripto ise Dolar
+    if(cat === 'kripto') return '$' + p.toLocaleString(undefined, {minimumFractionDigits:2, maximumFractionDigits:2});
+    
+    // 2. Altın ise Kontrol Et
+    if(cat === 'altin') {
+        // Eğer global ONS ise DOLAR ($), değilse (Gram, Çeyrek vb.) TL (₺) göster
+        // Not: 'ONS' kelimesini fonksiyondan gelen symbol içinde arıyoruz.
+        // Ancak burada p (fiyat) ve cat (kategori) geliyor. Symbol'ü doğrudan parametre olarak almıyoruz.
+        // Hızlı çözüm: ONS fiyatı genelde 2000-3000 arasıdır, Gram 2000-3000 arasıdır karışabilir.
+        // EN SAĞLAMI: Bu fonksiyonu çağıran yeri düzeltmektir ama 
+        // Basit Hack: ONS Altın haricindekileri TL yapalım.
+        
+        // EĞER ÇAĞIRAN YERİ DEĞİŞTİREMİYORSAK ŞÖYLE YAPALIM:
+        // Bu fonksiyonu çağıran renderNextBatch içinde küçük bir düzeltme yapacağız.
+        // Ama şimdilik genel kural:
+        // Eğer fiyat TL bazındaysa (Gram, Çeyrek) formatlayalım.
+        // Bunu burada ayırt etmek zor olduğu için 3. ADIMI MUTLAKA YAPINIZ.
+        return '$' + p.toLocaleString(); // Geçici, 3. Adımı uygulayın.
+    }
+    
+    // 3. Diğerleri (Hisse, Döviz) TL
     return '₺' + p.toLocaleString(undefined, {minimumFractionDigits:2, maximumFractionDigits:2});
 }
+
 
 // Yardımcı: Tekil DOM Güncelleme (BIST Live Effect için)
 function updateDomItem(item) {
@@ -2766,35 +3935,50 @@ function formatVolume(val, sym) {
     return sym + val.toFixed(0);
 }
 
-/* --- AKILLI GRAFİK MOTORU (OTOMATİK BORSA SEÇİMLİ) --- */
+/* --- AKILLI GRAFİK MOTORU (DÜZELTİLMİŞ) --- */
 function initMdChart(rawSymbol) {
     let s = rawSymbol.toUpperCase().trim();
     let tvSymbol = s;
 
     // 1. KATEGORİYE GÖRE SEMBOL FORMATI
     if(currentCategory === 'kripto') {
-        // Temizlik: İçinde BINANCE, USDT vs varsa temizle, saf ismi al
+        // Temizlik: İçinde BINANCE, USDT vs varsa temizle, saf ismi al (örn: BTC)
         let clean = s.replace('BINANCE:', '').replace('USDT', '').trim();
         
-        // ÖNEMLİ DEĞİŞİKLİK:
-        // Başına "BINANCE:" yazmıyoruz. Sadece "SYMBOL" + "USDT" yapıyoruz.
-        // Böylece TradingView en hacimli borsayı (Kucoin, OKX, Gate vb.) kendi bulur.
-        tvSymbol = clean + "USDT";
+        // ÖZEL DURUM: Sadece Majör Coinleri Binance'e Zorla (Garantili Veri İçin)
+        const majorCoins = ['BTC', 'ETH', 'BNB', 'SOL', 'XRP', 'ADA', 'AVAX', 'DOGE', 'TRX', 'DOT', 'MATIC', 'SHIB', 'LTC'];
+        
+        if(majorCoins.includes(clean)) {
+            tvSymbol = "BINANCE:" + clean + "USDT";
+        } else {
+            // DİĞERLERİ: Binance zorlamasını kaldır! 
+            // Sadece "PEPEUSDT" gönderiyoruz, TradingView en uygun borsayı (OKX, GATE, BYBIT) kendi seçsin.
+            tvSymbol = clean + "USDT";
+        }
     }
     else if(currentCategory === 'hisse') {
         tvSymbol = "BIST:" + s.replace('.IS', '');
     }
     else if(currentCategory === 'altin') {
-        if(s === 'GC=F' || s === 'ALTIN' || s === 'ONS') tvSymbol = "TVC:GOLD";
-        else if(s === 'SI=F' || s === 'GÜMÜŞ') tvSymbol = "TVC:SILVER";
-        else tvSymbol = "TVC:" + s.replace('=F','');
+        if(s.includes('ONS') || s === 'GOLD' || s === 'XAUUSD' || s === 'GC=F') {
+            tvSymbol = "TVC:GOLD"; 
+        } 
+        else if(s.includes('GÜMÜŞ') || s.includes('SILVER')) {
+            tvSymbol = "TVC:SILVER";
+        }
+        else {
+            // Gram altın vb için Dolar/TL grafiği daha mantıklı referanstır
+            tvSymbol = "FX:USDTRY"; 
+        }
     }
     else if(currentCategory === 'doviz') {
-        tvSymbol = "FX:" + s.replace('=X','').replace('TRY','USDTRY');
+        let cleanFx = s.replace('/','').replace('=X','');
+        // Frankfurther API'den gelen veriler (EURUSD, USDTRY) düzgündür
+        if(cleanFx.length === 6) tvSymbol = "FX:" + cleanFx;
+        else tvSymbol = "FX:USDTRY";
     }
 
     // 2. GRAFİĞİ ÇİZ
-    // Eğer eski bir grafik varsa önce içini temizle (Hata önleyici)
     const container = document.getElementById('mdChartContainer');
     if(container) container.innerHTML = "";
 
@@ -2879,6 +4063,7 @@ async function openMarketDetail(rawSymbol) {
     document.getElementById('marketDetailModal').style.display = 'flex';
     document.getElementById('mdSymbolTitle').innerText = rawSymbol;
     document.getElementById('mdBigPrice').innerText = "Yükleniyor...";
+    
     
     let w = JSON.parse(localStorage.getItem('tm_watchlist')) || [];
     let icon = document.getElementById('mdWatchIcon');
@@ -2982,7 +4167,7 @@ function closeMarketDetail() {
 
 /* --- YENİ WATCHLIST BUTON MANTIĞI --- */
 
-/* --- VERİ GARANTİLİ DETAY PENCERESİ --- */
+/* --- ORİJİNAL COINGECKO ENTEGRASYONLU DETAY PENCERESİ --- */
 async function openMarketDetail(rawSymbol) {
     currentMdSymbol = rawSymbol; 
     
@@ -2990,87 +4175,129 @@ async function openMarketDetail(rawSymbol) {
     document.getElementById('marketDetailModal').style.display = 'flex';
     document.getElementById('mdSymbolTitle').innerText = rawSymbol;
     document.getElementById('mdBigPrice').innerText = "Yükleniyor...";
-
-    // 2. SATIŞ BUTONUNU SIFIRLA (Bug Önleyici)
-    const sellBtn = document.querySelector('.bq-sell');
-    if(sellBtn) {
-        sellBtn.style.background = ""; 
-        sellBtn.style.border = "";
-        sellBtn.style.color = ""; 
-        sellBtn.innerHTML = '<span><i class="fas fa-arrow-up"></i> SATIŞ YAP</span><span class="bq-sub">Portföyden Sat</span>';
-        sellBtn.onclick = actionSellFromMarket; 
-    }
     
-    // 3. İzleme İkonu
+    // İzleme İkonu
     let w = JSON.parse(localStorage.getItem('tm_watchlist')) || [];
     let icon = document.getElementById('mdWatchIcon');
-    if(w.includes(rawSymbol)) icon.style.color = "#f59e0b"; 
-    else icon.style.color = "var(--text-sub)"; 
+    icon.style.color = w.includes(rawSymbol) ? "#f59e0b" : "var(--text-sub)"; 
     
-    // 4. UI Hazırlığı
+    // Sekmeyi 'Genel Bakış'a al
     switchMdTab('overview', document.querySelectorAll('.md-tab')[0]);
-    document.getElementById('mdAssetLogo').innerHTML = getAssetLogoHtml(rawSymbol);
 
+    // Değişkenler
     let details = { price: 0, change: 0, high: 0, low: 0, vol: 0, vwap: 0 };
-    let displaySym = rawSymbol;
+    let logoHtml = getAssetLogoHtml(rawSymbol); // Varsayılan logo
+    let dataFound = false;
 
-    try {
-        // --- A) KRİPTO İSE ---
-        if(currentCategory === 'kripto') {
-            try {
-                // Önce Binance'e Sor
-                let s = rawSymbol.replace('USDT', '') + 'USDT';
-                s = s.replace('BINANCE:', ''); 
-                
-                const res = await fetch(`https://api.binance.com/api/v3/ticker/24hr?symbol=${s}`);
-                if(!res.ok) throw new Error("Binance'de Yok");
-                
-                const d = await res.json();
-                details.price = parseFloat(d.lastPrice);
-                details.change = parseFloat(d.priceChangePercent);
-                details.high = parseFloat(d.highPrice);
-                details.low = parseFloat(d.lowPrice);
-                details.vol = parseFloat(d.quoteVolume);
-                details.vwap = parseFloat(d.weightedAvgPrice);
-                displaySym = rawSymbol.replace('BINANCE:','').replace('USDT','') + " / USDT";
-            } catch (binanceErr) {
-                // Binance'de Yoksa -> GENEL MOTORU (CoinGecko) KULLAN
-                // Bu kısım çok önemli, silinirse veri gelmez!
-                let pData = await getPrice(rawSymbol);
-                
-                details.price = pData.price || 0;
-                details.change = pData.change || 0;
-                // Veri yoksa grafiği bozmamak için tahmini doldur
-                details.high = details.price * 1.05; 
-                details.low = details.price * 0.95;
-                details.vwap = details.price;
-                details.vol = 0;
+    // --- 1. ADIM: CACHE (HAZIR LİSTE) KONTROLÜ (EN HIZLI YÖNTEM) ---
+    // Eğer ana listede bu coini görüyorsanız, verisi zaten elinizdedir. Tekrar istek atmaya gerek yok.
+    if(marketDataCache && marketDataCache.length > 0) {
+        // Sembol eşleşmesi yap (Büyük/Küçük harf duyarsız)
+        const cachedItem = marketDataCache.find(x => x.symbol.toUpperCase() === rawSymbol.toUpperCase());
+        
+        if(cachedItem) {
+            // Veriler Cache'den alınıyor (Burada her şey doludur)
+            details.price = cachedItem.price;
+            details.change = cachedItem.change;
+            details.vol = cachedItem.vol || 0;
+            
+            // CoinGecko 'markets' endpoint'i high/low bilgisini de verir.
+            // Eğer cache yapımızda high/low saklamıyorsak simüle ederiz.
+            if(cachedItem.high_24h) details.high = cachedItem.high_24h;
+            else details.high = details.price * 1.05;
+
+            if(cachedItem.low_24h) details.low = cachedItem.low_24h;
+            else details.low = details.price * 0.95;
+            
+            details.vwap = details.price; // VWAP CoinGecko'da standart yok, fiyatı basıyoruz
+
+            // Logo Cache'den
+            if(cachedItem.image) {
+                logoHtml = `<div class="asset-logo-wrap" style="background:transparent; border:none; width:50px; height:50px;"><img src="${cachedItem.image}" class="asset-logo-img"></div>`;
             }
-        } 
-        // --- B) HİSSE / ALTIN / DÖVİZ İSE ---
-        else {
-            let pData = await getPrice(rawSymbol);
-            details.price = pData.price || 0;
-            details.change = pData.change || 0;
-            details.high = details.price * 1.02; 
-            details.low = details.price * 0.98;
-            details.vwap = details.price;
+            
+            dataFound = true;
         }
-        
-        // Veriyi Ekrana Bas
-        renderMdUI(details, displaySym);
-        
-        // Grafiği Başlat
-        initMdChart(rawSymbol);
-
-    } catch (e) {
-        console.error("Detay Hatası:", e);
-        document.getElementById('mdBigPrice').innerText = "Veri Yok";
-        document.getElementById('mdDisclaimer').innerHTML = "<span style='color:red'>Bağlantı sorunu, grafik deneniyor...</span>";
-        initMdChart(rawSymbol);
     }
-}
 
+    // --- 2. ADIM: CACHE'DE YOKSA API'YE SOR (ARAMA YAPILDIYSA) ---
+    if(!dataFound && currentCategory === 'kripto' && coingeckoApiKey) {
+        try {
+            // Önce: Sembolden ID bul (Search API)
+            const searchUrl = `https://api.coingecko.com/api/v3/search?query=${rawSymbol}&x_cg_demo_api_key=${coingeckoApiKey}`;
+            const searchRes = await fetch(searchUrl);
+            const searchData = await searchRes.json();
+            
+            let coinId = null;
+            if(searchData.coins && searchData.coins.length > 0) {
+                // Tam eşleşme ara, yoksa ilkini al
+                const match = searchData.coins.find(c => c.symbol.toUpperCase() === rawSymbol.toUpperCase());
+                coinId = match ? match.id : searchData.coins[0].id;
+                
+                // Logoyu buradan alabiliriz (large versiyonu)
+                if(match && match.thumb) {
+                    let largeImg = match.thumb.replace('thumb', 'large');
+                    logoHtml = `<div class="asset-logo-wrap" style="background:transparent; border:none; width:50px; height:50px;"><img src="${largeImg}" class="asset-logo-img"></div>`;
+                }
+            }
+
+            if(coinId) {
+                // Sonra: ID ile detay çek (Market Data API)
+                // Bu endpoint High, Low, Vol her şeyi verir.
+                const detailUrl = `https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&ids=${coinId}&x_cg_demo_api_key=${coingeckoApiKey}`;
+                const detailRes = await fetch(detailUrl);
+                const detailData = await detailRes.json();
+
+                if(detailData && detailData.length > 0) {
+                    const d = detailData[0];
+                    details.price = d.current_price;
+                    details.change = d.price_change_percentage_24h;
+                    details.high = d.high_24h;
+                    details.low = d.low_24h;
+                    details.vol = d.total_volume;
+                    details.vwap = d.current_price;
+                    
+                    // Logo API'den geldiyse güncelle
+                    if(d.image) {
+                        logoHtml = `<div class="asset-logo-wrap" style="background:transparent; border:none; width:50px; height:50px;"><img src="${d.image}" class="asset-logo-img"></div>`;
+                    }
+                    dataFound = true;
+                }
+            }
+        } catch(e) {
+            console.log("CG Detay Hatası:", e);
+        }
+    }
+
+    // --- 3. ADIM: HİSSE / ALTIN / DÖVİZ (ESKİ SİSTEM) ---
+    if(!dataFound && currentCategory !== 'kripto') {
+        let pData = await getPrice(rawSymbol);
+        if(pData.price > 0) {
+            details.price = pData.price;
+            details.change = pData.change;
+            details.high = pData.price * 1.02;
+            details.low = pData.price * 0.98;
+            dataFound = true;
+        }
+    }
+
+    // Ekrana Bas
+    document.getElementById('mdAssetLogo').innerHTML = logoHtml;
+
+    if(dataFound || details.price > 0) {
+        // Eksik veri varsa (örn: hisse) simüle et
+        if(!details.high) details.high = details.price * 1.05;
+        if(!details.low) details.low = details.price * 0.95;
+        
+        renderMdUI(details, rawSymbol);
+    } else {
+        document.getElementById('mdBigPrice').innerText = "Veri Yok";
+        document.getElementById('mdDisclaimer').innerHTML = "<span style='color:red'>Veri alınamadı.</span>";
+    }
+
+    // Grafiği Başlat
+    initMdChart(rawSymbol);
+}
 
 
 // 2. Butona Basınca Listeye Ekle ve Sarı Yap
@@ -3305,7 +4532,7 @@ newContainer.addEventListener('scroll', function() {
     }
 });
 
-/* --- COINGECKO ID İLE DETAY AÇMA --- */
+/* --- GÜNCELLENMİŞ COINGECKO DETAY AÇMA --- */
 async function openCoinGeckoDetail(coinId) {
     // Yükleniyor Modalı Aç
     document.getElementById('marketDetailModal').style.display = 'flex';
@@ -3313,45 +4540,56 @@ async function openCoinGeckoDetail(coinId) {
     document.getElementById('mdBigPrice').innerText = "--";
     
     try {
-        // Fiyat ve Detayları Çek (Simple Price Endpoint)
-        const url = `https://api.coingecko.com/api/v3/simple/price?ids=${coinId}&vs_currencies=usd&include_24hr_change=true&include_24hr_vol=true&x_cg_demo_api_key=${coingeckoApiKey}`;
-        const res = await fetch(url);
-        const data = await res.json();
+        // 1. COİN DETAYLARINI ÇEK
+        const detailUrl = `https://api.coingecko.com/api/v3/coins/${coinId}?localization=false&tickers=false&market_data=true&community_data=false&developer_data=false&sparkline=false&x_cg_demo_api_key=${coingeckoApiKey}`;
+        const detailRes = await fetch(detailUrl);
+        const coinData = await detailRes.json();
         
-        const d = data[coinId];
-        if(!d) throw new Error("Veri yok");
+        if(!coinData || !coinData.market_data) throw new Error("Veri yok");
 
+        const md = coinData.market_data;
+        
         // Detayları Doldur
         const details = {
-            price: d.usd,
-            change: d.usd_24h_change,
-            vol: d.usd_24h_vol,
-            high: d.usd * 1.05, // API simple endpoint high/low vermez, simüle ediyoruz
-            low: d.usd * 0.95,
-            vwap: d.usd
+            price: md.current_price.usd,
+            change: md.price_change_percentage_24h,
+            vol: md.total_volume.usd,
+            high: md.high_24h.usd,
+            low: md.low_24h.usd,
+            vwap: md.current_price.usd
         };
 
-        // Sembolü büyük harf yap (coinId genelde 'bitcoin' dir, sembol 'BTC' olsun isteriz)
-        // Burada basitçe ID'yi kullanıyoruz, daha detaylısı için /coins/{id} gerekir ama bu hızlıdır.
-        const displaySym = coinId.toUpperCase();
-        currentMdSymbol = displaySym; // İşlem yapmak için kaydet
+        // Sembolü büyük harf yap (örn: pepecto -> PEPECTO)
+        const displaySym = coinData.symbol.toUpperCase();
+        
+        currentMdSymbol = displaySym;
         
         // UI Güncelle
-        renderMdUI(details, displaySym);
+        renderMdUI(details, displaySym + " / USD");
         
-        // Logoyu (Basit bir trick ile thumb URL'den large yapıyoruz veya search'ten gelen logoyu kullanıyoruz)
-        // Burada varsayılan olarak API'den logo gelmediği için search kısmındaki logoyu kullanamıyoruz.
-        // Hızlı çözüm: Harf logosu göster, grafik yükle.
-        document.getElementById('mdAssetLogo').innerHTML = getAssetLogoHtml(displaySym);
+        // Logo Ekle
+        if(coinData.image && coinData.image.large) {
+            document.getElementById('mdAssetLogo').innerHTML = `
+                <div class="asset-logo-wrap" style="background:transparent; border:none; width:50px; height:50px;">
+                    <img src="${coinData.image.large}" class="asset-logo-img">
+                </div>`;
+        } else {
+            document.getElementById('mdAssetLogo').innerHTML = getAssetLogoHtml(displaySym);
+        }
         
-        // Grafik Başlat
-        initMdChart(displaySym + "USDT"); // TradingView genelde sembolü tanır
+        // Grafiği Başlat (displaySym gönderiyoruz, örn: "PEPE")
+        // initMdChart bunu alıp "PEPEUSDT" yapacak ve TradingView borsayı kendi bulacak.
+        initMdChart(displaySym);
 
-    } catch(e) {
-        addNotification('danger', 'Hata', 'Coin verisi alınamadı.');
-        closeMarketDetail();
+    } catch (e) {
+        console.error("CG Detay Hatası:", e);
+        document.getElementById('mdBigPrice').innerText = "Hata";
+        document.getElementById('mdDisclaimer').innerHTML = "<span style='color:red'>Veri alınamadı.</span>";
+        // Yine de grafiği sembol üzerinden denemeye çalışalım
+        if(coinId) initMdChart(coinId.toUpperCase()); 
     }
 }
+
 /* --- AKILLI SATIŞ (GÖRSEL EFEKTLİ & OTO DÜZELTMELİ) --- */
 function actionSellFromMarket() {
     if (!currentMdSymbol) return;
@@ -3405,260 +4643,846 @@ function actionSellFromMarket() {
     }
 }
 
-/* --- XIAOMI & ANDROID İÇİN GÜÇLENDİRİLMİŞ BİLDİRİM SİSTEMİ (V3 - FINAL) --- */
+/* --- BİLDİRİM AYARLARI VE İZİN YÖNETİMİ --- */
 
-// 1. Önce Eski/Bozuk Service Worker'ları Temizle ve Yenisini Kur
-if ('serviceWorker' in navigator) {
-    // Sayfa yüklenir yüklenmez çalışsın
-    window.addEventListener('load', async () => {
-        try {
-            // Eski kayıtları bul ve sil (Temizlik)
-            const registrations = await navigator.serviceWorker.getRegistrations();
-            for(let registration of registrations) {
-                // Eğer bozuksa sil
-                if(!registration.active && !registration.waiting && !registration.installing) {
-                   await registration.unregister();
-                }
-            }
-
-            // Yeni "Sanal" Worker Kodunu Hazırla
-            const swCode = `
-                self.addEventListener('install', (event) => {
-                    self.skipWaiting(); // Beklemeden aktif ol
-                });
-                self.addEventListener('activate', (event) => {
-                    event.waitUntil(clients.claim()); // Sayfayı ele geçir
-                });
-                self.addEventListener('notificationclick', function(event) {
-                    event.notification.close();
-                    event.waitUntil(
-                        clients.matchAll({type: 'window', includeUncontrolled: true}).then(windowClients => {
-                            if (windowClients.length > 0) {
-                                windowClients[0].focus();
-                            } else {
-                                clients.openWindow('/');
-                            }
-                        })
-                    );
-                });
-            `;
-            
-            const blob = new Blob([swCode], {type: 'text/javascript'});
-            const swUrl = URL.createObjectURL(blob);
-            
-            // Yenisini Kaydet
-            const reg = await navigator.serviceWorker.register(swUrl, { scope: './' });
-            console.log("SW Başarıyla Kaydedildi:", reg);
-
-        } catch (err) {
-            console.error("SW Kurulum Hatası:", err);
+// İzin İste
+function requestNotifyPermission() {
+    if (!("Notification" in window)) {
+        alert("Tarayıcınız bildirimleri desteklemiyor.");
+        return;
+    }
+    Notification.requestPermission().then((permission) => {
+        checkNotifyUI();
+        if (permission === "granted") {
+            addNotification('success', 'Bildirimler Aktif', 'Artık önemli gelişmeleri kaçırmayacaksınız.');
         }
     });
 }
 
-// 2. Bildirim Gönderme Ana Fonksiyonu
-async function addNotification(type, title, msg) {
-    // Listeye ekle
-    let n = { type: type, title: title, msg: msg, time: new Date().toLocaleTimeString(), read: false };
-    notifications.unshift(n);
-    if(notifications.length > 50) notifications.pop();
-    localStorage.setItem('tm_notifications', JSON.stringify(notifications));
-    updateBadge();
+// İzin Durumunu Kontrol Et (UI Göster/Gizle)
+function checkNotifyPermission() {
+    const card = document.getElementById('permRequestCard');
+    if (!("Notification" in window)) return;
     
-    // UI Güncelle
-    if(document.getElementById('page-notifications') && document.getElementById('page-notifications').classList.contains('active')) {
-        renderNotifications();
-    }
-
-    // Sistem Bildirimi Gönder
-    if ("Notification" in window && Notification.permission === "granted") {
-        sendSystemNotification(type, title, msg);
-    }
-}
-
-// 3. Sistem Bildirimi Tetikleyicisi
-function sendSystemNotification(type, title, msg) {
-    let iconUrl = "https://cdn-icons-png.flaticon.com/512/3429/3429170.png";
-    if(type === 'danger') iconUrl = "https://cdn-icons-png.flaticon.com/512/190/190406.png";
-
-    // Service Worker Hazır Olana Kadar Bekle ve Gönder
-    if (navigator.serviceWorker) {
-        navigator.serviceWorker.ready.then(registration => {
-            registration.showNotification(title, {
-                body: msg,
-                icon: iconUrl,
-                badge: iconUrl,
-                vibrate: [200, 100, 200],
-                tag: 'tm-' + Date.now()
-            });
-        }).catch(e => {
-            // SW çalışmazsa yedek yöntem
-            new Notification(title, { body: msg, icon: iconUrl });
-        });
+    if (Notification.permission === "granted" || Notification.permission === "denied") {
+        if(card) card.style.display = 'none';
     } else {
-        new Notification(title, { body: msg, icon: iconUrl });
+        if(card) card.style.display = 'block'; // İzin verilmemişse uyarıyı göster
     }
 }
 
-/* --- TANI VE TEST BUTONU (GÜNCELLENMİŞ) --- */
-setTimeout(() => {
-    let oldBtn = document.getElementById("debug-btn");
-    if(oldBtn) oldBtn.remove();
-
-    let btn = document.createElement("button");
-    btn.id = "debug-btn";
-    btn.innerHTML = "📢 BİLDİRİM TESTİ (V3)";
-    btn.style.position = "fixed";
-    btn.style.top = "60px";
-    btn.style.left = "50%";
-    btn.style.transform = "translateX(-50%)";
-    btn.style.zIndex = "999999";
-    btn.style.background = "#ef4444";
-    btn.style.color = "white";
-    btn.style.padding = "12px 20px";
-    btn.style.fontWeight = "bold";
-    btn.style.borderRadius = "30px";
-    btn.style.boxShadow = "0 5px 15px rgba(0,0,0,0.5)";
-    btn.style.border = "2px solid white";
-    
-    btn.onclick = async function() {
-        alert("⏳ Kontrol ediliyor...");
-
-        // 1. İzin Kontrolü
-        if (Notification.permission !== "granted") {
-            let perm = await Notification.requestPermission();
-            if (perm !== "granted") {
-                alert("⛔ İzin verilmedi! Adres çubuğundaki kilit simgesinden 'Sıfırla' diyip tekrar deneyin.");
-                return;
-            }
-        }
-
-        // 2. Service Worker Kontrolü
-        if (!navigator.serviceWorker.controller) {
-            // Eğer yüklü değilse sayfayı yenilemeyi öner
-             alert("⚠️ Service Worker henüz hazır değil. Sayfa yenileniyor...");
-             location.reload();
-             return;
-        }
-
-        // 3. Gönderim
-        try {
-            sendSystemNotification('info', 'TradeMaster', 'Tebrikler! Bildirim sistemi çalışıyor 🚀');
-            alert("✅ Komut gönderildi! Yukarıdan bildirim inmesi lazım.");
-        } catch (e) {
-            alert("❌ Hata: " + e);
-        }
-    };
-    
-    document.body.appendChild(btn);
-}, 2000);
-
-/* --- UYGULAMAYI BAŞLATMA KOMUTLARI --- */
-
-// 1. Ana Fonksiyonu Çağır
-try {
-    initApp();
-} catch (e) {
-    console.log("Başlatma hatası:", e);
+// Ayarları UI'a Yansıt
+function loadNotifyUI() {
+    document.getElementById('ntf_price').checked = notifySettings.price;
+    document.getElementById('ntf_trade').checked = notifySettings.trade;
+    document.getElementById('ntf_news').checked = notifySettings.news;
+    document.getElementById('ntf_sound').checked = notifySettings.sound;
+    document.getElementById('ntf_vibrate').checked = notifySettings.vibrate;
+    checkNotifyPermission();
 }
 
-// 2. Arka Plan Animasyonunu Çağır
-if(typeof initBackgroundAnimation === 'function') {
-    initBackgroundAnimation();
+// Ayarları Kaydet
+function saveNotifySettings() {
+    notifySettings.price = document.getElementById('ntf_price').checked;
+    notifySettings.trade = document.getElementById('ntf_trade').checked;
+    notifySettings.news = document.getElementById('ntf_news').checked;
+    notifySettings.sound = document.getElementById('ntf_sound').checked;
+    notifySettings.vibrate = document.getElementById('ntf_vibrate').checked;
+    
+    localStorage.setItem('tm_notify_settings', JSON.stringify(notifySettings));
+    
+    // Ses önizlemesi (Kullanıcı sesi açarsa 'ding' duysun)
+    if(notifySettings.sound && event.target.id === 'ntf_sound') playNotificationSound('success');
 }
 
-// 3. GÜVENLİK SİGORTASI: Eğer uygulama 3 saniye içinde açılmazsa ekranı zorla aç
-setTimeout(() => {
-    const splash = document.getElementById('splash-screen');
-    if(splash && !splash.classList.contains('hidden')) {
-        console.log("Splash screen zorla kapatılıyor...");
-        splash.classList.add('hidden');
-        setTimeout(() => { 
-            if(splash.parentNode) splash.parentNode.removeChild(splash); 
-        }, 500);
+// Ses Çalma Fonksiyonu
+function playNotificationSound(type) {
+    // Basit bip sesleri (Base64 encoded audio - dış dosya gerektirmez)
+    let audioSrc = "";
+    
+    if(type === 'success' || type === 'info') {
+        // Success "Ding"
+        audioSrc = "data:audio/wav;base64,UklGRl9vT19XQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YU"; // (Kısaltıldı, gerçek bir ding sesi için URL kullanmak daha iyi olabilir veya kısa beep)
+        // Daha güvenilir bir yöntem: Web Audio API Oscillator
+        playBeep(600, 200, 'sine');
+    } else if (type === 'danger' || type === 'warn') {
+        // Error "Buzz"
+        playBeep(150, 400, 'sawtooth');
     }
-}, 3500);
-/* --- DETAYLI TANI VE TEST BUTONU --- */
-setTimeout(() => {
-    // Varsa eski butonu sil
-    let oldBtn = document.getElementById("debug-btn");
-    if(oldBtn) oldBtn.remove();
+}
 
-    let btn = document.createElement("button");
-    btn.id = "debug-btn";
-    btn.innerHTML = "📢 BİLDİRİM TESTİ (TIKLA)";
-    btn.style.position = "fixed";
-    btn.style.top = "50px"; // Biraz aşağı aldım
-    btn.style.left = "50%";
-    btn.style.transform = "translateX(-50%)";
-    btn.style.zIndex = "999999";
-    btn.style.background = "#ef4444"; // Kırmızı
-    btn.style.color = "white";
-    btn.style.padding = "15px 25px";
-    btn.style.fontWeight = "bold";
-    btn.style.borderRadius = "30px";
-    btn.style.boxShadow = "0 10px 25px rgba(0,0,0,0.5)";
-    btn.style.border = "2px solid white";
+// Basit Web Audio Beep (Dosyasız Ses)
+const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+function playBeep(freq, duration, type='sine') {
+    if(audioCtx.state === 'suspended') audioCtx.resume();
+    const osc = audioCtx.createOscillator();
+    const gain = audioCtx.createGain();
+    osc.type = type;
+    osc.frequency.value = freq;
+    osc.connect(gain);
+    gain.connect(audioCtx.destination);
+    osc.start();
     
-    btn.onclick = async function() {
-        alert("1. Test Başlıyor...");
+    // Fade out
+    gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + (duration/1000));
+    
+    setTimeout(() => osc.stop(), duration);
+}
 
-        // A. Tarayıcı Desteği Kontrolü
-        if (!("Notification" in window)) {
-            alert("❌ HATA: Bu tarayıcı bildirim desteklemiyor.");
-            return;
+function testNotification() {
+    addNotification('info', 'Test Bildirimi', 'Bu bir test mesajıdır. Ses ve titreşim çalışıyor mu?');
+}
+
+// checkNotifyUI fonksiyonu eksikti, ekleyelim
+function checkNotifyUI() {
+    checkNotifyPermission();
+}
+/* --- YENİ GELİŞMİŞ VE GENİŞ KAPSAMLI DÖVİZ MOTORU --- */
+async function fetchFastForex() {
+    try {
+        // 1. CANLI VERİ (Binance - Majör Paralar)
+        // Dolar, Euro ve Sterlin'i buradan anlık çekiyoruz
+        const resBinance = await fetch('https://api.binance.com/api/v3/ticker/24hr?symbols=["USDTTRY","EURUSDT","GBPUSDT"]');
+        const dataBinance = await resBinance.json();
+
+        // 2. PARİTE ORANLARI (Diğerleri için - Open Exchange Rates)
+        // JPY, CNY, CAD, RUB gibi paraların Dolara olan oranını alıyoruz
+        const resParity = await fetch('https://open.er-api.com/v6/latest/USD');
+        const dataParity = await resParity.json();
+        const rates = dataParity.rates; 
+
+        // --- VERİLERİ AYIKLA ---
+        const usdt = dataBinance.find(x => x.symbol === 'USDTTRY');
+        const eur = dataBinance.find(x => x.symbol === 'EURUSDT');
+        const gbp = dataBinance.find(x => x.symbol === 'GBPUSDT');
+
+        if (!usdt || !eur || !gbp || !rates) return [];
+
+        // Ana Dolar Kuru (Her şey buna bağlı değişecek)
+        const usdPrice = parseFloat(usdt.lastPrice);
+        const usdChange = parseFloat(usdt.priceChangePercent);
+
+        // --- YARDIMCI: DİĞER PARALARI HESAPLA ---
+        // Mantık: (1 Dolar / Parite Oranı) * Canlı Dolar Kuru = Canlı TL Değeri
+        const calcOther = (parityVal, name, flagCode, symbolPrefix) => {
+            const priceInUsd = 1 / parityVal; 
+            const priceInTry = priceInUsd * usdPrice;
+            
+            return {
+                symbol: name,
+                price: priceInTry,
+                change: usdChange, // Dolar artarsa bunlar da artar
+                vol: 0,
+                source: 'HESAPLANAN',
+                image: `https://flagcdn.com/w80/${flagCode}.png`, // Ülke Bayrağı
+                unit: symbolPrefix
+            };
+        };
+
+        // --- YARDIMCI: MAJÖR PARALAR (EUR, GBP) ---
+        const eurPrice = parseFloat(eur.lastPrice) * usdPrice;
+        const eurChange = parseFloat(eur.priceChangePercent) + usdChange;
+        
+        const gbpPrice = parseFloat(gbp.lastPrice) * usdPrice;
+        const gbpChange = parseFloat(gbp.priceChangePercent) + usdChange;
+
+        // --- LİSTEYİ OLUŞTUR ---
+        return [
+            // 1. MAJÖRLER (Binance Destekli)
+            { symbol: 'USD/TRY', price: usdPrice, change: usdChange, vol: parseFloat(usdt.quoteVolume), source: 'CANLI PİYASA', image: 'https://flagcdn.com/w80/us.png', unit: '₺' },
+            { symbol: 'EUR/TRY', price: eurPrice, change: eurChange, vol: 0, source: 'HESAPLANAN', image: 'https://flagcdn.com/w80/eu.png', unit: '₺' },
+            { symbol: 'GBP/TRY', price: gbpPrice, change: gbpChange, vol: 0, source: 'HESAPLANAN', image: 'https://flagcdn.com/w80/gb.png', unit: '₺' },
+
+            // 2. DİĞERLERİ (Otomatik Hesaplananlar)
+            calcOther(rates.JPY, 'JPY/TRY', 'jp', '¥'),  // Japon Yeni
+            calcOther(rates.CNY, 'CNY/TRY', 'cn', '¥'),  // Çin Yuanı
+            calcOther(rates.CAD, 'CAD/TRY', 'ca', '$'),  // Kanada Doları
+            calcOther(rates.AUD, 'AUD/TRY', 'au', '$'),  // Avustralya Doları
+            calcOther(rates.RUB, 'RUB/TRY', 'ru', '₽'),  // Rus Rublesi
+            calcOther(rates.AZN, 'AZN/TRY', 'az', '₼'),  // Azerbaycan Manatı
+            
+            // 3. PARİTE (Euro/Dolar)
+            { symbol: 'EUR/USD', price: parseFloat(eur.lastPrice), change: parseFloat(eur.priceChangePercent), vol: parseFloat(eur.quoteVolume), source: 'PARİTE', image: 'https://flagcdn.com/w80/eu.png', unit: '$' }
+        ];
+
+    } catch (e) {
+        console.error("Forex Hatası:", e);
+        return [];
+    }
+}
+
+/* --- GÜNCELLENMİŞ ALTIN MOTORU (7/24 CANLI) --- */
+async function fetchFastGold() {
+    try {
+        // 1. Canlı Veriyi Çek (Binance API - En Hızlı ve Ücretsiz)
+        // PAXGUSDT = Ons Altın ($), USDTTRY = Dolar Kuru
+        const res = await fetch('https://api.binance.com/api/v3/ticker/24hr?symbols=["PAXGUSDT","USDTTRY"]');
+        const data = await res.json();
+
+        // Verileri Ayrıştır
+        const paxg = data.find(x => x.symbol === 'PAXGUSDT');
+        const usdt = data.find(x => x.symbol === 'USDTTRY');
+
+        if (!paxg || !usdt) throw new Error("Veri Eksik");
+
+        const onsPrice = parseFloat(paxg.lastPrice);
+        const change = parseFloat(paxg.priceChangePercent); // Ons'un günlük değişimi
+        const dolarKuru = parseFloat(usdt.lastPrice);
+
+        // 2. Hesaplamalar (Türkiye Standartları)
+        // 1 Ons = 31.1035 Gram
+        const gramHas = (onsPrice * dolarKuru) / 31.1035;
+        
+        // Diğer altın türleri Gram Has fiyata göre oranlanır
+        const gram22 = gramHas * 0.916;  // 22 Ayar (Bilezik)
+        const ceyrek = gramHas * 1.606;  // Çeyrek (Eski/Yeni ortalama katsayı)
+        const yarim = ceyrek * 2;
+        const tam = ceyrek * 4;
+        const ata = ceyrek * 4.10;       // Cumhuriyet/Ata
+
+        // 3. Basit İkonlar
+        const iconBar = "data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect x='8' y='16' width='48' height='32' fill='%23FFD700' stroke='%23DAA520' stroke-width='2'/%3E%3C/svg%3E";
+        const iconCoin = "data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Ccircle cx='32' cy='32' r='28' fill='%23FFD700' stroke='%23DAA520' stroke-width='2'/%3E%3C/svg%3E";
+
+        // 4. Listeyi Döndür
+        return [
+            { symbol: 'ONS ALTIN', price: onsPrice, change: change, vol: 0, source: 'KURESEL', image: iconBar },
+            { symbol: 'GRAM HAS (24K)', price: gramHas, change: change, vol: 0, source: 'HESAPLANAN', image: iconBar },
+            { symbol: 'ÇEYREK ALTIN', price: ceyrek, change: change, vol: 0, source: 'DARPHANE', image: iconCoin },
+            { symbol: 'YARIM ALTIN', price: yarim, change: change, vol: 0, source: 'DARPHANE', image: iconCoin },
+            { symbol: 'TAM ALTIN', price: tam, change: change, vol: 0, source: 'DARPHANE', image: iconCoin },
+            { symbol: 'CUMHURİYET', price: ata, change: change, vol: 0, source: 'DARPHANE', image: iconCoin },
+            { symbol: '22 AYAR GRAM', price: gram22, change: change, vol: 0, source: 'HESAPLANAN', image: iconCoin }
+        ];
+
+    } catch (e) {
+        console.error("Gold Hata:", e);
+        return [];
+    }
+}
+
+/* --- TRADER KARNESİ HESAPLAMA MOTORU --- */
+function calculateTraderScore() {
+    let history = JSON.parse(localStorage.getItem('tm_full_trade_history')) || [];
+    
+    // Sadece SATIŞ işlemlerini al
+    let sales = history.filter(t => t.type === 'SATIM');
+
+    // Eğer yeterli satış verisi yoksa hesaplama yapma
+    if (sales.length < 2) {
+        document.getElementById('scoreBadge').innerText = "VERİ YOK";
+        document.getElementById('pfScore').innerText = "--";
+        document.getElementById('expScore').innerText = "--";
+        document.getElementById('avgWinVal').innerText = "--";
+        document.getElementById('avgLossVal').innerText = "--";
+        return;
+    }
+
+    let grossProfit = 0;
+    let grossLoss = 0;
+    let winCount = 0;
+    let lossCount = 0;
+    let totalWinVal = 0;
+    let totalLossVal = 0;
+
+    sales.forEach(t => {
+        // Eski kayıtlarda pnl yoksa 0 varsay
+        let pnl = t.pnl !== undefined ? parseFloat(t.pnl) : 0;
+        
+        // Para birimi dönüşümü (Hepsini ana para birimine çevir)
+        let val = pnl;
+        let transCurr = t.curr || (t.isUsdBase ? 'USD' : 'TRY');
+        
+        if(appSettings.currency === 'TRY' && transCurr === 'USD') val = val * usdTryRate;
+        else if(appSettings.currency === 'USD' && transCurr === 'TRY') val = val / usdTryRate;
+
+        if (val > 0) {
+            grossProfit += val;
+            totalWinVal += val;
+            winCount++;
+        } else {
+            let absLoss = Math.abs(val);
+            grossLoss += absLoss;
+            totalLossVal += absLoss;
+            lossCount++;
+        }
+    });
+
+    let totalTrades = winCount + lossCount;
+    let winRate = totalTrades > 0 ? (winCount / totalTrades) : 0;
+    
+    // Kâr Faktörü (Profit Factor)
+    let profitFactor = grossLoss === 0 ? (grossProfit > 0 ? 5 : 0) : (grossProfit / grossLoss);
+    if(profitFactor > 99) profitFactor = 99; // Görsel sınır
+
+    // Ortalama Kazanç ve Kayıp
+    let avgWin = winCount > 0 ? (totalWinVal / winCount) : 0;
+    let avgLoss = lossCount > 0 ? (totalLossVal / lossCount) : 0;
+
+    // Beklenti Değeri
+    let lossRate = 1 - winRate;
+    let expectancy = (winRate * avgWin) - (lossRate * avgLoss);
+
+    // --- UI GÜNCELLEME ---
+    let sym = appSettings.currency === 'TRY' ? '₺' : '$';
+
+    // 1. Kâr Faktörü
+    let pfEl = document.getElementById('pfScore');
+    pfEl.innerText = profitFactor.toFixed(2);
+    
+    let badge = document.getElementById('scoreBadge');
+    if(profitFactor >= 2.0) {
+        pfEl.style.color = "var(--success)";
+        document.getElementById('pfDesc').innerText = "Mükemmel";
+        badge.innerText = "MASTER";
+        badge.style.color = "var(--success)";
+        badge.style.background = "rgba(16, 185, 129, 0.15)";
+    } else if(profitFactor >= 1.1) {
+        pfEl.style.color = "var(--gold)";
+        document.getElementById('pfDesc').innerText = "Kârlı";
+        badge.innerText = "PRO";
+        badge.style.color = "var(--gold)";
+        badge.style.background = "rgba(245, 158, 11, 0.15)";
+    } else {
+        pfEl.style.color = "var(--danger)";
+        document.getElementById('pfDesc').innerText = "Riskli";
+        badge.innerText = "ACEMİ";
+        badge.style.color = "var(--danger)";
+        badge.style.background = "rgba(239, 68, 68, 0.15)";
+    }
+
+    // 2. Beklenti
+    let expEl = document.getElementById('expScore');
+    expEl.innerText = sym + expectancy.toLocaleString(undefined, {maximumFractionDigits:0});
+    expEl.style.color = expectancy > 0 ? "var(--success)" : "var(--danger)";
+
+    // 3. Ortalamalar
+    document.getElementById('avgWinVal').innerText = sym + avgWin.toLocaleString(undefined, {maximumFractionDigits:0});
+    document.getElementById('avgLossVal').innerText = sym + avgLoss.toLocaleString(undefined, {maximumFractionDigits:0});
+}
+
+/* --- MANUEL GEÇMİŞ EKLEME FONKSİYONLARI --- */
+
+function openManualHistoryModal() {
+    // Tarih alanına bugünü otomatik doldur
+    const today = new Date().toISOString().split('T')[0];
+    document.getElementById('manualDate').value = today;
+    
+    // Temizle
+    document.getElementById('manualSym').value = '';
+    document.getElementById('manualAmt').value = '';
+    document.getElementById('manualPrice').value = '';
+    document.getElementById('manualBuyCost').value = '';
+    
+    // Varsayılan ALIM modu
+    setManualType('ALIM', document.querySelectorAll('#manualHistoryModal .sim-tab')[0]);
+    
+    document.getElementById('manualHistoryModal').style.display = 'flex';
+}
+
+function setManualType(type, btn) {
+    document.getElementById('manualType').value = type;
+    
+    // Buton stilleri
+    const group = btn.parentElement;
+    group.querySelectorAll('.sim-tab').forEach(t => t.classList.remove('active'));
+    btn.classList.add('active');
+    
+    // Satış ise Maliyet sor, Alım ise sorma
+    const costArea = document.getElementById('manualCostArea');
+    if (type === 'SATIM') {
+        costArea.style.display = 'block';
+    } else {
+        costArea.style.display = 'none';
+    }
+}
+
+function saveManualHistory() {
+    const type = document.getElementById('manualType').value;
+    const sym = document.getElementById('manualSym').value.toUpperCase().trim();
+    const dateInput = document.getElementById('manualDate').value;
+    const amt = parseFloat(document.getElementById('manualAmt').value);
+    const price = parseFloat(document.getElementById('manualPrice').value);
+    
+    if (!sym || !amt || !price || !dateInput) {
+        return addNotification('warn', 'Eksik Bilgi', 'Lütfen tüm alanları doldurun.');
+    }
+
+    // Tarihi formatla (YYYY-MM-DD -> GG.AA.YYYY)
+    const d = new Date(dateInput);
+    const formattedDate = d.toLocaleDateString('tr-TR');
+    
+    let pnl = 0;
+    
+    // Eğer SATIŞ ise Kâr/Zarar hesapla
+    if (type === 'SATIM') {
+        const buyCost = parseFloat(document.getElementById('manualBuyCost').value);
+        if (!buyCost) {
+            return addNotification('warn', 'Maliyet Gerekli', 'Kâr hesabı için alış maliyeti şarttır.');
+        }
+        // PnL = (Satış Fiyatı - Alış Maliyeti) * Adet
+        pnl = (price - buyCost) * amt;
+    }
+
+    // Kaydı oluştur
+    let t = { 
+        date: formattedDate, 
+        time: "00:00", // Manuel eklenenler için varsayılan saat
+        type: type, 
+        sym: sym, 
+        qty: amt, 
+        price: price, 
+        total: amt * price, 
+        desc: 'Manuel Kayıt', 
+        curr: appSettings.currency, // Varsayılan para birimi
+        pnl: pnl
+    }; 
+    
+    // Listeye ekle
+    tradeHistory.push(t);
+    
+    // Tarihe göre sırala (Yeniden eskiye)
+    // Not: Basitçe en sona ekliyoruz, renderHistory zaten ters çevirip gösteriyor.
+    
+    localStorage.setItem('tm_full_trade_history', JSON.stringify(tradeHistory)); 
+    
+    renderHistory();
+    calculateTraderScore(); // Karne puanını anında güncelle
+    
+    document.getElementById('manualHistoryModal').style.display = 'none';
+    addNotification('success', 'Kaydedildi', 'Geçmiş işlem başarıyla eklendi.');
+}
+
+// --- YENİ AYARLAR MENÜSÜ FONKSİYONLARI ---
+
+// Alt sayfayı açar (Sağdan gelir)
+function openSubPage(pageId) {
+    // Ana menüyü gizle
+    document.getElementById('settings-home').style.display = 'none';
+    // Detay kapsayıcıyı göster (Animasyonlu)
+    const detailWrapper = document.getElementById('settings-detail');
+    detailWrapper.style.display = 'block';
+    detailWrapper.style.animation = 'slideInRight 0.3s forwards';
+
+    // Tüm içerikleri gizle, sadece isteneni aç
+    document.querySelectorAll('.settings-content').forEach(el => el.style.display = 'none');
+    document.getElementById('set-' + pageId).style.display = 'block';
+
+    // Başlığı güncelle
+    let titles = { 'profile': 'Profilim', 'general': 'Genel Ayarlar', 'notify': 'Bildirimler', 'history': 'Geçmiş İşlemler' };
+    document.getElementById('subPageTitle').innerText = titles[pageId] || 'Detay';
+}
+
+// Ana menüye döner
+function closeSubPage() {
+    document.getElementById('settings-detail').style.display = 'none';
+    document.getElementById('settings-home').style.display = 'block';
+    document.getElementById('settings-home').style.animation = 'fadeIn 0.3s forwards';
+}
+
+// Profil yüklendiğinde menüdeki kartı da güncelle
+// (Mevcut loadProfile fonksiyonunu bozmadan genişletiyoruz)
+const _originalLoadProfile = loadProfile;
+loadProfile = function() {
+    _originalLoadProfile(); // Eski fonksiyonu çalıştır
+    
+    // Menüdeki resmi ve ismi güncelle
+    if(userProfile.name) document.getElementById('menuProfileName').innerText = userProfile.name;
+    if(userProfile.img) document.getElementById('menuProfileImg').src = userProfile.img;
+};
+    // --- 3. ADIM: PROFİL RESMİ VE PREMIUM GÖRÜNÜM ---
+
+    // Mevcut yükleme fonksiyonunu sakla (hata vermemesi için)
+    var eskiLoadProfile = typeof loadProfile === 'function' ? loadProfile : function(){};
+
+    // Yeni ve Gelişmiş Profil Yükleyici
+    loadProfile = function() {
+        // 1. Önceki işlemleri yap (İsimleri inputlara doldur vs.)
+        eskiLoadProfile();
+
+        // 2. Hafızadan bilgileri çek
+        let up = JSON.parse(localStorage.getItem('tm_user_profile')) || {};
+        let name = up.name || 'Misafir';
+        
+        // 3. Menüdeki İsim ve Resmi Güncelle
+        // (Eğer isim yoksa 'Misafir' yazar)
+        let nameEl = document.getElementById('menuProfileName');
+        if(nameEl) nameEl.innerText = name;
+        
+        // 4. Resim Ayarı (Resim yoksa Baş Harf Avatarı oluştur)
+        let imgSource = up.img;
+        if(!imgSource || imgSource === "null" || imgSource === "") {
+            // UI Avatars servisi: İsmin baş harflerinden resim yapar (Örn: Ahmet Yılmaz -> AY)
+            imgSource = `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=1e2538&color=ffffff&size=128&bold=true`;
         }
         
-        if (!("serviceWorker" in navigator)) {
-            alert("❌ HATA: Service Worker desteklenmiyor.");
-            return;
-        }
+        // Hem ana menüdeki (küçük) hem detaydaki (büyük) resmi güncelle
+        const menuImg = document.getElementById('menuProfileImg');
+        const detailImg = document.getElementById('displayProfileImg');
+        
+        if(menuImg) menuImg.src = imgSource;
+        if(detailImg) detailImg.src = imgSource;
 
-        // B. İzin İsteme
-        try {
-            let perm = await Notification.requestPermission();
-            alert("2. İzin Durumu: " + perm.toUpperCase());
-            
-            if (perm !== "granted") {
-                alert("⚠️ İzin verilmedi! Lütfen adres çubuğundaki kilit simgesinden izin verin.");
-                return;
-            }
-        } catch (e) {
-            alert("❌ İzin Hatası: " + e);
-        }
-
-        // C. Service Worker Kayıt Kontrolü
-        try {
-            const reg = await navigator.serviceWorker.getRegistration();
-            if (!reg) {
-                alert("❌ HATA: Service Worker yüklü değil! Sayfayı yenileyin.");
-                return;
-            }
-            alert("3. Service Worker Aktif ✅");
-
-            // D. Bildirim Gönderme
-            try {
-                await reg.showNotification("TradeMaster Test", {
-                    body: "Bu bildirim Service Worker üzerinden geldi! 🚀",
-                    icon: "https://cdn-icons-png.flaticon.com/512/3429/3429170.png",
-                    vibrate: [200, 100, 200],
-                    tag: 'debug-notif-' + Date.now()
-                });
-                alert("4. Komut Gönderildi! Şimdi bildirim çubuğuna bak.");
-            } catch (err) {
-                alert("❌ Gönderme Hatası: " + err.message);
-                // Yedek yöntem (Normal Notification)
-                new Notification("Yedek Bildirim", { body: "SW başarısız oldu, bu yedek." });
-            }
-
-        } catch (e) {
-            alert("❌ SW Hatası: " + e);
+        // 5. PREMIUM PARILTISI (GOLD EFEKT)
+        // Kartı bul ve parlaması için sınıf ekle
+        const card = document.getElementById('mainProfileCard');
+        if(card) {
+            card.classList.add('premium-glow'); 
         }
     };
     
-    document.body.appendChild(btn);
-}, 2000);
+    // Sayfa açıldığında tetikle
+    setTimeout(loadProfile, 500);
+    
+    function sendFeedback() {
+    let sub = document.getElementById('fbSubject').value;
+    let msg = document.getElementById('fbMessage').value;
+    
+    if(msg.length < 5) {
+        addNotification('warn', 'Eksik Bilgi', 'Lütfen mesajınızı yazınız.');
+        return;
+    }
+
+    // Şimdilik simülasyon yapıyoruz (Gerçek sunucu olmadığı için)
+    document.getElementById('feedbackModal').style.display = 'none';
+    document.getElementById('fbMessage').value = ""; // Temizle
+    
+    // Yükleniyor efekti verelim
+    addNotification('info', 'Gönderiliyor...', 'Mesajınız iletiliyor.');
+    
+    setTimeout(() => {
+        addNotification('success', 'İletildi', 'Geri bildiriminiz için teşekkürler! 🚀');
+    }, 1000);
+}
+
+// Global değişken: Tıklanan linki burada tutacağız
+let currentTargetUrl = "";
+
+// 1. Habere tıklandığında bu çalışır: Linki kaydeder ve Modalı açar
+function openNewsRedirect(url) {
+    if(!url) return;
+    currentTargetUrl = url;
+    
+    // Modalı göster
+    document.getElementById('newsRedirectModal').style.display = 'flex';
+}
+
+// 2. Kullanıcı "GİT" butonuna basınca bu çalışır
+function proceedToNews() {
+    if(currentTargetUrl) {
+        // Yeni sekmede güvenli açılış
+        window.open(currentTargetUrl, '_blank', 'noopener,noreferrer');
+    }
+    closeNewsModal();
+}
+
+// 3. İptal veya kapatma fonksiyonu
+function closeNewsModal() {
+    document.getElementById('newsRedirectModal').style.display = 'none';
+    currentTargetUrl = ""; // Linki temizle
+}
+
+/* --- GERİ GELME (SWIPE / TUŞ) YÖNETİMİ --- */
+
+// 1. Geri hareketini dinle (Ekran kaydırma veya tuş)
+window.addEventListener('popstate', function(event) {
+    const modal = document.getElementById('newsRedirectModal');
+    
+    // Eğer Haber Modalı Açıksa:
+    if (modal && modal.style.display === 'flex') {
+        // Uygulamayı kapatma, sadece modalı gizle
+        modal.style.display = 'none';
+        currentTargetUrl = ""; 
+    }
+});
+
+// 2. Modalı açarken tarayıcıya "Sahte Geçmiş" ekle
+function openNewsRedirect(url) {
+    if(!url) return;
+    currentTargetUrl = url;
+    
+    // BU SATIR ÇOK ÖNEMLİ:
+    // Tarayıcıya "Yeni bir sayfaya geçtik" diyoruz.
+    // Böylece kullanıcı kaydırınca (swipe yapınca) uygulamadan çıkmıyor,
+    // sadece bu eklediğimiz sahte geçmiş siliniyor.
+    history.pushState({ popup: 'news' }, null, window.location.href);
+    
+    document.getElementById('newsRedirectModal').style.display = 'flex';
+}
+
+// 3. Vazgeç butonuna basılırsa
+function closeNewsModal() {
+    // Manuel olarak geri git (Bu, yukarıdaki popstate olayını tetikler)
+    history.back(); 
+}
+
+// 4. Git butonuna basılırsa
+function proceedToNews() {
+    if(currentTargetUrl) {
+        // Yeni sekmede aç
+        window.open(currentTargetUrl, '_blank');
+        
+        // Kullanıcı haberi okuyup uygulamaya geri döndüğünde modal açık kalmasın
+        // Hafif gecikmeli olarak arkadaki modalı kapatıyoruz
+        setTimeout(() => {
+            const modal = document.getElementById('newsRedirectModal');
+            if (modal && modal.style.display === 'flex') {
+                history.back(); // Geçmişi temizleyerek kapat
+            }
+        }, 300);
+    }
+}
+
+/* --- GOOGLE DRIVE ENTEGRASYONU (GÜNCELLENMİŞ) --- */
+
+// 1. YAPILANDIRMA
+const CLIENT_ID = '188241284734-3tdriq9svbm1vh8acq2vqm80lieo5v7u.apps.googleusercontent.com';
+const API_KEY = 'AIzaSyCCxeYq1C4mnv-3CRvTDertau_Jlv11OaA';
+const DISCOVERY_DOC = 'https://www.googleapis.com/discovery/v1/apis/drive/v3/rest';
+const SCOPES = 'https://www.googleapis.com/auth/drive.file';
+
+let tokenClient;
+let gapiInited = false;
+let gisInited = false;
+
+// Sayfa yüklendiğinde API'leri başlat
+document.addEventListener('DOMContentLoaded', () => {
+    if(typeof gapi !== 'undefined') gapiLoaded();
+    if(typeof google !== 'undefined') gisLoaded();
+});
+
+// 2. KÜTÜPHANE YÜKLEME
+function gapiLoaded() {
+    gapi.load('client', async () => {
+        await gapi.client.init({
+            apiKey: API_KEY,
+            discoveryDocs: [DISCOVERY_DOC],
+        });
+        gapiInited = true;
+        updateDriveUI("Hazır. Giriş yapabilirsiniz.");
+        console.log("GAPI Yüklendi");
+    });
+}
+
+function gisLoaded() {
+    tokenClient = google.accounts.oauth2.initTokenClient({
+        client_id: CLIENT_ID,
+        scope: SCOPES,
+        callback: '', // Manuel yöneteceğiz
+    });
+    gisInited = true;
+    console.log("GIS Yüklendi");
+}
+
+// 3. GİRİŞ / ÇIKIŞ İŞLEMLERİ
+function handleAuthClick() {
+    if (!tokenClient) {
+        addNotification('warn', 'Yükleniyor', 'Google servisleri hazırlanıyor, bekleyin...');
+        // Eğer yüklenmemişse tekrar dene
+        if(typeof gapi !== 'undefined' && !gapiInited) gapiLoaded();
+        if(typeof google !== 'undefined' && !gisInited) gisLoaded();
+        return;
+    }
+
+    tokenClient.callback = async (resp) => {
+        if (resp.error !== undefined) {
+            throw (resp);
+        }
+        updateDriveUI("Bağlandı ✅");
+        addNotification('success', 'Başarılı', 'Google hesabına bağlandı.');
+        
+        // Token'ı gapi'ye ata
+        gapi.client.setToken(resp);
+    };
+
+    if (gapi.client.getToken() === null) {
+        tokenClient.requestAccessToken({prompt: 'consent'});
+    } else {
+        tokenClient.requestAccessToken({prompt: ''});
+    }
+}
+
+function handleSignoutClick() {
+    const token = gapi.client.getToken();
+    if (token !== null) {
+        google.accounts.oauth2.revoke(token.access_token);
+        gapi.client.setToken('');
+        updateDriveUI("Çıkış yapıldı.");
+        addNotification('info', 'Çıkış', 'Bağlantı kesildi.');
+    }
+}
+
+function updateDriveUI(msg) {
+    const el = document.getElementById('drive-status');
+    if(el) el.innerText = msg;
+}
+
+// 4. YEDEKLEME (UPLOAD) İŞLEMİ
+async function uploadToDrive() {
+    if(!gapi.client.getToken()) {
+        addNotification('warn', 'Giriş Gerekli', 'Önce Google Giriş yapmalısınız.');
+        handleAuthClick(); // Otomatik giriş penceresi aç
+        return;
+    }
+
+    addNotification('info', 'Yedekleniyor', 'Veriler hazırlanıyor...');
+
+    const backupData = {
+        myPF_final: localStorage.getItem('myPF_final'),
+        tm_cash_balance: localStorage.getItem('tm_cash_balance'),
+        tm_full_trade_history: localStorage.getItem('tm_full_trade_history'),
+        tm_user_profile: localStorage.getItem('tm_user_profile'),
+        tm_watchlist: localStorage.getItem('tm_watchlist'),
+        tm_settings: localStorage.getItem('tm_settings'),
+        backup_date: new Date().toLocaleString()
+    };
+
+    const fileContent = JSON.stringify(backupData);
+    const fileName = 'trademaster_backup.json';
+
+    try {
+        // Dosya ara
+        const response = await gapi.client.drive.files.list({
+            q: "name = '" + fileName + "' and trashed = false",
+            fields: 'files(id, name)',
+            spaces: 'drive'
+        });
+
+        const files = response.result.files;
+        
+        const fileMetadata = {
+            'name': fileName,
+            'mimeType': 'application/json'
+        };
+
+        const boundary = '-------314159265358979323846';
+        const delimiter = "\r\n--" + boundary + "\r\n";
+        const close_delim = "\r\n--" + boundary + "--";
+
+        // Türkçe karakter sorunu için encode
+        const base64Data = btoa(unescape(encodeURIComponent(fileContent)));
+
+        const multipartRequestBody =
+            delimiter +
+            'Content-Type: application/json\r\n\r\n' +
+            JSON.stringify(fileMetadata) +
+            delimiter +
+            'Content-Type: application/json\r\n' +
+            'Content-Transfer-Encoding: base64\r\n' +
+            '\r\n' +
+            base64Data +
+            close_delim;
+
+        let request;
+
+        if (files && files.length > 0) {
+            // Güncelle
+            const fileId = files[0].id;
+            request = gapi.client.request({
+                'path': '/upload/drive/v3/files/' + fileId,
+                'method': 'PATCH',
+                'params': {'uploadType': 'multipart'},
+                'headers': { 'Content-Type': 'multipart/related; boundary="' + boundary + '"' },
+                'body': multipartRequestBody
+            });
+        } else {
+            // Oluştur
+            request = gapi.client.request({
+                'path': '/upload/drive/v3/files',
+                'method': 'POST',
+                'params': {'uploadType': 'multipart'},
+                'headers': { 'Content-Type': 'multipart/related; boundary="' + boundary + '"' },
+                'body': multipartRequestBody
+            });
+        }
+
+        await request;
+        addNotification('success', 'Yedeklendi ☁️', 'Verileriniz Google Drive\'a kaydedildi.');
+
+    } catch (err) {
+        console.error("Drive Hatası:", err);
+        addNotification('danger', 'Hata', 'Yedekleme başarısız oldu. Konsolu kontrol edin.');
+    }
+}
+
+// 5. GERİ YÜKLEME (DOWNLOAD) İŞLEMİ
+async function downloadFromDrive() {
+    if(!gapi.client.getToken()) {
+        addNotification('warn', 'Giriş Gerekli', 'Önce Google Giriş yapmalısınız.');
+        handleAuthClick();
+        return;
+    }
+
+    addNotification('info', 'Aranıyor', 'Yedek dosyası aranıyor...');
+
+    try {
+        const fileName = 'trademaster_backup.json';
+        const response = await gapi.client.drive.files.list({
+            q: "name = '" + fileName + "' and trashed = false",
+            fields: 'files(id, name)',
+            spaces: 'drive'
+        });
+
+        const files = response.result.files;
+
+        if (files && files.length > 0) {
+            const fileId = files[0].id;
+            
+            const fileRes = await gapi.client.drive.files.get({
+                fileId: fileId,
+                alt: 'media'
+            });
+
+            const data = fileRes.result;
+
+            if(data.myPF_final) localStorage.setItem('myPF_final', data.myPF_final);
+            if(data.tm_cash_balance) localStorage.setItem('tm_cash_balance', data.tm_cash_balance);
+            if(data.tm_full_trade_history) localStorage.setItem('tm_full_trade_history', data.tm_full_trade_history);
+            if(data.tm_user_profile) localStorage.setItem('tm_user_profile', data.tm_user_profile);
+            if(data.tm_watchlist) localStorage.setItem('tm_watchlist', data.tm_watchlist);
+            if(data.tm_settings) localStorage.setItem('tm_settings', data.tm_settings);
+
+            if(confirm("Yedek başarıyla indirildi. Uygulama yeniden başlatılsın mı?")) {
+                location.reload();
+            } else {
+                addNotification('success', 'Tamamlandı', 'Veriler yüklendi.');
+                // Sayfayı yenilemeden verileri güncelle
+                loadPF(true);
+                renderHistory();
+                loadProfile();
+            }
+
+        } else {
+            addNotification('warn', 'Bulunamadı', 'Drive\'da yedek dosyası yok.');
+        }
+
+    } catch (err) {
+        console.error("İndirme Hatası:", err);
+        addNotification('danger', 'Hata', 'Veri indirilemedi.');
+    }
+}
+
+
+// --- LANDING PAGE YÖNETİMİ ---
+function enterApplication() {
+    // 1. Vitrin sayfasını yavaşça yok et
+    const landing = document.getElementById('landing-page-container');
+    landing.style.transition = "opacity 0.5s ease";
+    landing.style.opacity = "0";
+    
+    setTimeout(() => {
+        // 2. Vitrini tamamen kaldır
+        landing.style.display = "none";
+        
+        // 3. Asıl uygulamayı başlat (Splash Screen görünecek)
+        // Eğer initApp sayfa açılışında otomatik çalışıyorsa, onu buradan tekrar tetikleyebiliriz
+        // veya splash screen'i gizli başlatıp burada açabiliriz.
+        // Mevcut kodunda initApp() en sonda çalışıyor. Onu değiştireceğiz.
+    }, 500);
+}
 
 </script>
 </body>
 </html>
+
